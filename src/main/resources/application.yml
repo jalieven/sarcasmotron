@@ -1,0 +1,32 @@
+# general
+node:
+  name: default
+
+info:
+  app.name: Sarcasmotron
+  node.name: ${node.name}
+  build:
+    artifact: ${project.artifactId}
+    groupId: ${project.groupId}
+    description: ${project.description}
+    version: ${project.version}
+
+# nosql connectivity
+spring:
+  redis:
+    host: localhost
+    port: 6379
+  data:
+    elasticsearch:
+      clusterNodes: localhost:9300
+    mongodb:
+      host: localhost
+      port: 27017
+      database: sarcasmotron
+
+# rest interface
+server:
+  port: 8080
+endpoints:
+  shutdown:
+    enabled: true
