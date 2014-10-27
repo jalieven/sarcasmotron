@@ -1,8 +1,8 @@
 package com.rizzo.sarcasmotron.aop;
 
 import com.google.common.collect.Lists;
-import com.rizzo.sarcasmotron.domain.elasticsearch.ESSarcasm;
 import com.rizzo.sarcasmotron.domain.elasticsearch.ESComment;
+import com.rizzo.sarcasmotron.domain.elasticsearch.ESSarcasm;
 import com.rizzo.sarcasmotron.domain.mongodb.Comment;
 import com.rizzo.sarcasmotron.domain.mongodb.Sarcasm;
 import com.rizzo.sarcasmotron.elasticsearch.ElasticsearchSarcasmRepository;

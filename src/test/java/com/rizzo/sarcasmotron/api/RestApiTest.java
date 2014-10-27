@@ -5,16 +5,19 @@ import com.jayway.restassured.RestAssured;
 import com.jayway.restassured.http.ContentType;
 import com.jayway.restassured.path.json.config.JsonPathConfig;
 import com.rizzo.sarcasmotron.boot.Sarcasmotron;
+import com.rizzo.sarcasmotron.domain.calc.VoteStats;
 import com.rizzo.sarcasmotron.domain.mongodb.Comment;
 import com.rizzo.sarcasmotron.domain.mongodb.Sarcasm;
+import com.rizzo.sarcasmotron.domain.web.Stats;
+import com.rizzo.sarcasmotron.domain.web.StatsRequest;
 import com.rizzo.sarcasmotron.domain.web.TrendRequest;
 import com.rizzo.sarcasmotron.domain.web.VoteRequest;
 import com.rizzo.sarcasmotron.elasticsearch.ElasticsearchSarcasmRepository;
 import com.rizzo.sarcasmotron.mongodb.MongoDBSarcasmRepository;
-import com.rizzo.sarcasmotron.trend.TrendCalculator;
+import com.rizzo.sarcasmotron.calc.VoteCalculator;
+import org.elasticsearch.common.joda.time.Days;
 import org.hamcrest.Matchers;
 import org.joda.time.DateTime;
-import org.joda.time.Days;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
@@ -33,11 +36,13 @@ import org.springframework.test.context.web.WebAppConfiguration;
 
 import java.math.BigDecimal;
 import java.util.List;
+import java.util.Map;
 
 import static com.jayway.restassured.RestAssured.given;
 import static com.jayway.restassured.config.JsonConfig.jsonConfig;
 import static com.jayway.restassured.config.RestAssuredConfig.newConfig;
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
 
 @RunWith(SpringJUnit4ClassRunner.class)
@@ -58,7 +63,7 @@ public class RestApiTest {
     private ElasticsearchSarcasmRepository elasticsearchSarcasmRepository;
 
     @Autowired
-    private TrendCalculator trendCalculator;
+    private VoteCalculator voteCalculator;
 
     private TestRestTemplate restTemplate = new TestRestTemplate();
 
@@ -70,7 +75,7 @@ public class RestApiTest {
 
     @After
     public void tearDown() throws InterruptedException {
-        mongoDBSarcasmRepository.deleteAll();
+        //mongoDBSarcasmRepository.deleteAll();
     }
 
     @Test
@@ -225,11 +230,10 @@ public class RestApiTest {
     @Test
     public void testTrendLine() throws InterruptedException {
         LOGGER.debug("TEST: testTrendLine");
-        mongoDBSarcasmRepository.deleteAll();
 
         final DateTime now = new DateTime();
         final DateTime pastMidnight = now.withTimeAtStartOfDay();
-        final DateTime yesterdayMidnight = now.minus(Days.days(1)).withTimeAtStartOfDay();
+        final DateTime yesterdayMidnight = now.minus(org.joda.time.Days.days(1)).withTimeAtStartOfDay();
 
         // first create some sarcastic quotes
         final Sarcasm sarcasmFour = new Sarcasm()
@@ -293,7 +297,7 @@ public class RestApiTest {
         mongoDBSarcasmRepository.save(sarcasmZero);
         LOGGER.debug("Generated Sarcasm id: " + sarcasmZero.getId());
 
-        final List<String> distinctUsers = trendCalculator.getDistinctUsers();
+        final List<String> distinctUsers = voteCalculator.getDistinctUsers();
         assertEquals(1, distinctUsers.size());
         assertEquals("jalie", distinctUsers.get(0));
 
@@ -340,6 +344,150 @@ public class RestApiTest {
                 .then().log().all()
                 .statusCode(HttpStatus.GONE.value())
                 .body("cast", Matchers.is(false));
+
+    }
+
+    @Test
+    public void testTotalVotes() {
+        final DateTime now = new DateTime();
+
+        final Sarcasm sarcasmFour = new Sarcasm()
+                .setUser("jalie")
+                .setContext("Some context")
+                .setQuote("Very sarcastic quote")
+                .stamp(now.minus(org.joda.time.Days.days(6)));
+        sarcasmFour.upVote("kenzo");
+        sarcasmFour.upVote("joost");
+        sarcasmFour.upVote("gert");
+        mongoDBSarcasmRepository.save(sarcasmFour);
+        LOGGER.debug("Generated Sarcasm id: " + sarcasmFour.getId());
+
+        final Sarcasm sarcasmThree = new Sarcasm()
+                .setUser("jalie")
+                .setContext("Some context")
+                .setQuote("Very sarcastic quote")
+                .stamp(now.minus(org.joda.time.Days.days(5)));
+        sarcasmThree.downVote("joost");
+        sarcasmThree.upVote("wijlen");
+        sarcasmThree.upVote("ikke");
+        sarcasmThree.upVote("gij");
+        mongoDBSarcasmRepository.save(sarcasmThree);
+        LOGGER.debug("Generated Sarcasm id: " + sarcasmThree.getId());
+
+        final Sarcasm sarcasmTwo = new Sarcasm()
+                .setUser("jalie")
+                .setContext("Some context")
+                .setQuote("Very sarcastic quote")
+                .stamp(now.minus(org.joda.time.Days.days(4)));
+        sarcasmTwo.upVote("ikke");
+        sarcasmTwo.downVote("gij");
+        sarcasmTwo.upVote("wij");
+        sarcasmTwo.upVote("zij");
+        sarcasmTwo.upVote("jullie");
+        mongoDBSarcasmRepository.save(sarcasmTwo);
+        LOGGER.debug("Generated Sarcasm id: " + sarcasmTwo.getId());
+
+        final Sarcasm sarcasmOne = new Sarcasm()
+                .setUser("jalie")
+                .setContext("Some context")
+                .setQuote("Very sarcastic quote")
+                .stamp(now.minus(org.joda.time.Days.days(1)));
+        sarcasmOne.upVote("ikke");
+        sarcasmOne.downVote("gij");
+        sarcasmOne.upVote("zij");
+        mongoDBSarcasmRepository.save(sarcasmOne);
+        LOGGER.debug("Generated Sarcasm id: " + sarcasmOne.getId());
+
+        final Sarcasm sarcasmZero = new Sarcasm()
+                .setUser("jalie")
+                .setContext("Some context")
+                .setQuote("Very sarcastic quote")
+                .stamp(now);
+        sarcasmZero.upVote("ikke");
+        sarcasmZero.downVote("gij");
+        sarcasmZero.upVote("zij");
+        sarcasmZero.upVote("wij");
+        sarcasmZero.upVote("jullie");
+        sarcasmZero.upVote("iemand");
+        mongoDBSarcasmRepository.save(sarcasmZero);
+
+        final VoteStats stats = voteCalculator.calculateVoteStatsForUser("jalie", Days.days(3));
+        assertEquals(new Long(2), stats.getCount());
+        assertEquals(new Double(5.0), stats.getSum());
+        assertEquals(new Double(1.0), stats.getMin());
+        assertEquals(new Double(4.0), stats.getMax());
+    }
+
+    @Test
+    public void testWinnerCalculation() throws InterruptedException {
+        final DateTime now = new DateTime();
+
+        final Sarcasm sarcasmThree = new Sarcasm()
+                .setUser("jalie")
+                .setContext("Some context")
+                .setQuote("Very sarcastic quote")
+                .stamp(now.minus(org.joda.time.Days.days(5)));
+        sarcasmThree.downVote("joost");
+        sarcasmThree.upVote("wijlen");
+        sarcasmThree.upVote("ikke");
+        sarcasmThree.upVote("gij");
+        mongoDBSarcasmRepository.save(sarcasmThree);
+        LOGGER.debug("Generated Sarcasm id: " + sarcasmThree.getId());
+
+        final Sarcasm sarcasmTwo = new Sarcasm()
+                .setUser("gert")
+                .setContext("Some context")
+                .setQuote("Very sarcastic quote")
+                .stamp(now.minus(org.joda.time.Days.days(4)));
+        sarcasmTwo.upVote("ikke");
+        sarcasmTwo.downVote("gij");
+        sarcasmTwo.upVote("wij");
+        sarcasmTwo.upVote("zij");
+        sarcasmTwo.upVote("zijlen");
+        sarcasmTwo.upVote("wijlen");
+        sarcasmTwo.upVote("gunder");
+        sarcasmTwo.upVote("jullie");
+        mongoDBSarcasmRepository.save(sarcasmTwo);
+        LOGGER.debug("Generated Sarcasm id: " + sarcasmTwo.getId());
+
+        final Sarcasm sarcasmOne = new Sarcasm()
+                .setUser("joost")
+                .setContext("Some context")
+                .setQuote("Very sarcastic quote")
+                .stamp(now.minus(org.joda.time.Days.days(1)));
+        sarcasmOne.upVote("ikke");
+        sarcasmOne.downVote("gij");
+        sarcasmOne.upVote("zij");
+        mongoDBSarcasmRepository.save(sarcasmOne);
+        LOGGER.debug("Generated Sarcasm id: " + sarcasmOne.getId());
+
+        final Sarcasm sarcasmZero = new Sarcasm()
+                .setUser("jalie")
+                .setContext("Some context")
+                .setQuote("Very sarcastic quote")
+                .stamp(now);
+        sarcasmZero.upVote("ikke");
+        sarcasmZero.downVote("gij");
+        sarcasmZero.upVote("zij");
+        sarcasmZero.upVote("wij");
+        sarcasmZero.upVote("jullie");
+        sarcasmZero.upVote("iemand");
+        mongoDBSarcasmRepository.save(sarcasmZero);
+
+
+        final List<String> users = voteCalculator.getDistinctUsers();
+        Stats stats = new Stats();
+        for (String user : users) {
+            final VoteStats voteStats = voteCalculator.calculateVoteStatsForUser(user,
+                    new StatsRequest().setPeriodExpression("1w").getPeriod());
+            stats.addVoteStats(user, voteStats);
+        }
+        final List<Map.Entry<String, VoteStats>> winnerRanking = stats.sortedVoteStats();
+        assertNotNull(Iterables.getFirst(winnerRanking, null));
+        assertNotNull(Iterables.getLast(winnerRanking, null));
+        assertEquals(3, Iterables.size(winnerRanking));
+        assertEquals("jalie", Iterables.getFirst(winnerRanking, null).getKey());
+        assertEquals("joost", Iterables.getLast(winnerRanking, null).getKey());
 
     }
 

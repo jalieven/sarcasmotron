@@ -1,7 +1,8 @@
 package com.rizzo.sarcasmotron.boot;
 
 import com.rizzo.sarcasmotron.aop.ElasticSearchIndexInterceptor;
-import com.rizzo.sarcasmotron.trend.TrendCalculator;
+import com.rizzo.sarcasmotron.calc.VoteCalculator;
+import com.rizzo.sarcasmotron.task.ScheduledTasks;
 import com.rizzo.sarcasmotron.web.SarcasmotronController;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -9,11 +10,10 @@ import org.springframework.aop.Advisor;
 import org.springframework.aop.aspectj.AspectJExpressionPointcut;
 import org.springframework.aop.interceptor.CustomizableTraceInterceptor;
 import org.springframework.aop.support.DefaultPointcutAdvisor;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.CommandLineRunner;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.EnableAutoConfiguration;
-import org.springframework.boot.autoconfigure.data.elasticsearch.ElasticsearchRepositoriesAutoConfiguration;
-import org.springframework.boot.autoconfigure.data.mongo.MongoRepositoriesAutoConfiguration;
 import org.springframework.boot.builder.SpringApplicationBuilder;
 import org.springframework.boot.context.web.SpringBootServletInitializer;
 import org.springframework.context.annotation.Bean;
@@ -21,15 +21,29 @@ import org.springframework.context.annotation.ComponentScan;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.data.elasticsearch.repository.config.EnableElasticsearchRepositories;
 import org.springframework.data.mongodb.repository.config.EnableMongoRepositories;
+import org.springframework.scheduling.annotation.EnableScheduling;
+import org.springframework.scheduling.annotation.SchedulingConfigurer;
+import org.springframework.scheduling.config.ScheduledTaskRegistrar;
+import org.springframework.scheduling.support.CronTrigger;
+
+import java.util.concurrent.Executor;
+import java.util.concurrent.Executors;
 
 @Configuration
 @EnableAutoConfiguration
 @ComponentScan
+@EnableScheduling
 @EnableMongoRepositories(value= {"com.rizzo.sarcasmotron.mongodb"})
 @EnableElasticsearchRepositories(value = {"com.rizzo.sarcasmotron.elasticsearch"})
-public class Sarcasmotron extends SpringBootServletInitializer implements CommandLineRunner  {
+public class Sarcasmotron extends SpringBootServletInitializer implements CommandLineRunner, SchedulingConfigurer {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(Sarcasmotron.class);
+
+    @Value(value = "${scheduling.winner-calculation.cron}")
+    private String winnerCalculationCron;
+
+    @Value(value = "${scheduling.winner-calculation.period}")
+    private String winnerCalculationPeriod;
 
     @Override
     public void run(String... args) throws Exception {
@@ -56,7 +70,7 @@ public class Sarcasmotron extends SpringBootServletInitializer implements Comman
     @Bean
     public Advisor traceAdvisor() {
         AspectJExpressionPointcut pointcut = new AspectJExpressionPointcut();
-        pointcut.setExpression("execution(public * org.springframework.data.repository.Repository+.*(..))");
+        pointcut.setExpression("execution(public * org.springframework.data.repository.Repository+.*(..)) || execution(public * com.rizzo.sarcasmotron.task.ScheduledTasks+.*(..))");
         return new DefaultPointcutAdvisor(pointcut, traceInterceptor());
     }
 
@@ -66,8 +80,8 @@ public class Sarcasmotron extends SpringBootServletInitializer implements Comman
     }
 
     @Bean
-    public TrendCalculator trendCalculator() {
-        return new TrendCalculator();
+    public VoteCalculator trendCalculator() {
+        return new VoteCalculator();
     }
 
     @Bean
@@ -80,5 +94,28 @@ public class Sarcasmotron extends SpringBootServletInitializer implements Comman
     @Bean
     public SarcasmotronController sarcasmotronController() {
         return new SarcasmotronController();
+    }
+
+    @Override
+    public void configureTasks(ScheduledTaskRegistrar taskRegistrar) {
+        taskRegistrar.setScheduler(taskScheduler());
+        taskRegistrar.addTriggerTask(
+                new Runnable() {
+                    public void run() {
+                        scheduledTasks().calculateWinner();
+                    }
+                },
+                new CronTrigger(winnerCalculationCron)
+        );
+    }
+
+    @Bean(destroyMethod = "shutdown")
+    public Executor taskScheduler() {
+        return Executors.newScheduledThreadPool(42);
+    }
+
+    @Bean
+    public ScheduledTasks scheduledTasks() {
+        return new ScheduledTasks(winnerCalculationPeriod);
     }
 }

@@ -30,3 +30,12 @@ server:
 endpoints:
   shutdown:
     enabled: true
+
+# tasks
+scheduling:
+  # every friday at 15:00:
+  # we calculate the most sarcastic person of the week
+  winner-calculation:
+    # cron: 0 0 15 * * 5
+    cron: '*/10 * * * * *'
+    period: '1w'

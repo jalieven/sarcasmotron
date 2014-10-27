@@ -2,4 +2,5 @@
 - Create metrics Web-UI panel for viewing overall user sarcastic trends (parameters: user, period, interval)
 - Integrate with sso security
 - Configurable period summary/winner with email
-- Split up Sarcasm POJO for ES and Mongo repos
+- Cleanup RestApiTest
+- Eternalize the weekly results
