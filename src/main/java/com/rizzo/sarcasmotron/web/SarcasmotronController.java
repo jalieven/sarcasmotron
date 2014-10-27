@@ -49,6 +49,7 @@ public class SarcasmotronController {
                         distinctUser,
                         statsRequest.getPeriod());
                 stats.addVoteStats(distinctUser, voteStats);
+                stats.sort();
             }
             return new ResponseEntity<>(stats, HttpStatus.OK);
         }

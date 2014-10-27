@@ -33,8 +33,9 @@ public class ScheduledTasks {
                     new StatsRequest().setPeriodExpression(winnerPeriod).getPeriod());
             stats.addVoteStats(user, voteStats);
         }
-        final List<Map.Entry<String, VoteStats>> winnerRanking = stats.sortedVoteStats();
-        for (Map.Entry<String, VoteStats> rankingEntry : winnerRanking) {
+        stats.sort();
+        final Map<String, VoteStats> winnerRanking = stats.getVoteStats();
+        for (Map.Entry<String, VoteStats> rankingEntry : winnerRanking.entrySet()) {
             LOGGER.info("User: " + rankingEntry.getKey() + " - Stats: " + rankingEntry.getValue().toString());
         }
         // TODO eternalize the weekly results...

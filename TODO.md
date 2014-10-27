@@ -4,3 +4,4 @@
 - Configurable period summary/winner with email
 - Cleanup RestApiTest
 - Eternalize the weekly results
+- Add "from" and "to" members in Stats 

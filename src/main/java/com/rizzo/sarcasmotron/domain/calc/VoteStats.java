@@ -2,7 +2,7 @@ package com.rizzo.sarcasmotron.domain.calc;
 
 import org.apache.commons.lang.builder.ToStringBuilder;
 
-public class VoteStats {
+public class VoteStats implements Comparable {
 
     private Long count;
 
@@ -58,4 +58,16 @@ public class VoteStats {
                 .toString();
     }
 
+    @Override
+    public int compareTo(Object o) {
+        if(o != null && o instanceof VoteStats) {
+            VoteStats right = this;
+            VoteStats left = (VoteStats) o;
+            final int sumCompare = right.getSum().compareTo(left.getSum());
+            final int countCompare = right.getCount().compareTo(left.getCount());
+            return (sumCompare != 0) ? sumCompare : countCompare;
+        } else {
+            return 0;
+        }
+    }
 }

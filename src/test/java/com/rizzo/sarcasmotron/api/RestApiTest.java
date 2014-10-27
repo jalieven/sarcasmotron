@@ -474,7 +474,7 @@ public class RestApiTest {
         sarcasmZero.upVote("iemand");
         mongoDBSarcasmRepository.save(sarcasmZero);
 
-
+        // TODO rework this to API call
         final List<String> users = voteCalculator.getDistinctUsers();
         Stats stats = new Stats();
         for (String user : users) {
@@ -482,12 +482,14 @@ public class RestApiTest {
                     new StatsRequest().setPeriodExpression("1w").getPeriod());
             stats.addVoteStats(user, voteStats);
         }
-        final List<Map.Entry<String, VoteStats>> winnerRanking = stats.sortedVoteStats();
-        assertNotNull(Iterables.getFirst(winnerRanking, null));
-        assertNotNull(Iterables.getLast(winnerRanking, null));
-        assertEquals(3, Iterables.size(winnerRanking));
-        assertEquals("jalie", Iterables.getFirst(winnerRanking, null).getKey());
-        assertEquals("joost", Iterables.getLast(winnerRanking, null).getKey());
+        stats.sort();
+        final Map<String, VoteStats> sortedStats = stats.getVoteStats();
+        assertNotNull(Iterables.getFirst(sortedStats.keySet(), null));
+        assertNotNull(Iterables.getLast(sortedStats.keySet(), null));
+        assertEquals(3, Iterables.size(sortedStats.keySet()));
+        assertEquals("jalie", Iterables.getFirst(sortedStats.keySet(), null));
+        assertEquals("gert", Iterables.get(sortedStats.keySet(), 1));
+        assertEquals("joost", Iterables.getLast(sortedStats.keySet(), null));
 
     }
 
