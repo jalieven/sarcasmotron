@@ -1,11 +1,12 @@
-package com.rizzo.sarcasmotron.domain;
+package com.rizzo.sarcasmotron.domain.mongodb;
 
 import org.apache.commons.lang.builder.ToStringBuilder;
 
+import java.io.Serializable;
 import java.text.SimpleDateFormat;
 import java.util.Date;
 
-public class Comment {
+public class Comment implements Serializable {
 
     private static final SimpleDateFormat TIMESTAMP_FORMAT = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSSZ");
 

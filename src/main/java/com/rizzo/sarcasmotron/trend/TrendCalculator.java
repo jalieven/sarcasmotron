@@ -3,7 +3,7 @@ package com.rizzo.sarcasmotron.trend;
 import com.google.common.collect.Iterables;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
-import com.rizzo.sarcasmotron.domain.Sarcasm;
+import com.rizzo.sarcasmotron.domain.mongodb.Sarcasm;
 import org.apache.commons.math3.stat.descriptive.DescriptiveStatistics;
 import org.apache.commons.math3.stat.descriptive.SynchronizedDescriptiveStatistics;
 import org.elasticsearch.action.search.SearchResponse;

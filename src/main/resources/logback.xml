@@ -23,11 +23,12 @@
 
     <!--<logger name="org.springframework" level="WARN" />-->
     <logger name="org.springframework.aop.interceptor" level="TRACE" />
-    <logger name="org.springframework.web" level="TRACE" />
+    <logger name="org.springframework.web" level="DEBUG" />
     <logger name="org.hibernate" level="WARN" />
     <logger name="org.apache" level="WARN" />
     <logger name="com.rizzo" level="INFO" />
-    <logger name="com.jayway.restassured" level="TRACE" />
+    <logger name="com.rizzo.sarcasmotron.api" level="DEBUG" />
+    <logger name="com.jayway" level="TRACE" />
 
     <root level="INFO">
         <appender-ref ref="CONSOLE"/>>

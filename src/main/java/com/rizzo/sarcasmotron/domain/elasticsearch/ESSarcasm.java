@@ -1,5 +1,6 @@
-package com.rizzo.sarcasmotron.domain;
+package com.rizzo.sarcasmotron.domain.elasticsearch;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import org.apache.commons.lang.builder.ToStringBuilder;
@@ -9,13 +10,14 @@ import org.springframework.data.elasticsearch.annotations.Document;
 import org.springframework.data.elasticsearch.annotations.Field;
 import org.springframework.data.elasticsearch.annotations.FieldType;
 
+import java.io.Serializable;
 import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.List;
 import java.util.Map;
 
 @Document(indexName = "sarcasmotron", type = "sarcasms", shards = 1, replicas = 0, refreshInterval = "-1")
-public class Sarcasm {
+public class ESSarcasm implements Serializable {
 
     public static final String TIMESTAMP_PATTERN = "yyyy-MM-dd'T'HH:mm:ss.SSSZ";
     public static final SimpleDateFormat TIMESTAMP_FORMAT = new SimpleDateFormat(TIMESTAMP_PATTERN);
@@ -31,17 +33,18 @@ public class Sarcasm {
 
     private String context;
 
+    @JsonIgnore
     @Field(type = FieldType.Nested)
     private Map<String, Integer> votes;
 
     @Field(type = FieldType.Nested)
-    private List<Comment> comments;
+    private List<ESComment> ESComments;
 
     public String getId() {
         return this.id;
     }
 
-    public Sarcasm setId(String id) {
+    public ESSarcasm setId(String id) {
         this.id = id;
         return this;
     }
@@ -50,16 +53,17 @@ public class Sarcasm {
         return timestamp;
     }
 
-    public void setTimestamp(String timestamp) {
+    public ESSarcasm setTimestamp(String timestamp) {
         this.timestamp = timestamp;
+        return this;
     }
 
-    public Sarcasm stamp(DateTime datetime) {
+    public ESSarcasm stamp(DateTime datetime) {
         this.timestamp = TIMESTAMP_FORMAT.format(datetime.toDate());
         return this;
     }
 
-    public Sarcasm stamp() {
+    public ESSarcasm stamp() {
         this.timestamp = TIMESTAMP_FORMAT.format(new Date());
         return this;
     }
@@ -68,7 +72,7 @@ public class Sarcasm {
         return this.user;
     }
 
-    public Sarcasm setUser(String user) {
+    public ESSarcasm setUser(String user) {
         this.user = user;
         return this;
     }
@@ -77,7 +81,7 @@ public class Sarcasm {
         return this.quote;
     }
 
-    public Sarcasm setQuote(String quote) {
+    public ESSarcasm setQuote(String quote) {
         this.quote = quote;
         return this;
     }
@@ -86,7 +90,7 @@ public class Sarcasm {
         return this.context;
     }
 
-    public Sarcasm setContext(String context) {
+    public ESSarcasm setContext(String context) {
         this.context = context;
         return this;
     }
@@ -125,25 +129,25 @@ public class Sarcasm {
         return votes;
     }
 
-    public Sarcasm setVotes(Map<String, Integer> votes) {
+    public ESSarcasm setVotes(Map<String, Integer> votes) {
         this.votes = votes;
         return this;
     }
 
-    public List<Comment> getComments() {
-        if(this.comments == null) {
-            this.comments = Lists.newArrayList();
+    public List<ESComment> getESComments() {
+        if(this.ESComments == null) {
+            this.ESComments = Lists.newArrayList();
         }
-        return this.comments;
+        return this.ESComments;
     }
 
-    public Sarcasm setComments(List<Comment> comments) {
-        this.comments = comments;
+    public ESSarcasm setESComments(List<ESComment> ESComments) {
+        this.ESComments = ESComments;
         return this;
     }
 
-    public Sarcasm addComment(Comment comment) {
-        getComments().add(comment);
+    public ESSarcasm addComment(ESComment ESComment) {
+        getESComments().add(ESComment);
         return this;
     }
 
@@ -156,7 +160,7 @@ public class Sarcasm {
                 .append("quote", quote)
                 .append("context", context)
                 .append("votes", votes)
-                .append("comments", comments)
+                .append("comments", ESComments)
                 .toString();
     }
 }

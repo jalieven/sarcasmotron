@@ -7,8 +7,11 @@ Sarcasm tracker for the enterprise
 
 Trend Line functionality:
 
+'''bash
 curl -v -H "Content-Type: application/json" -XPOST 'http://localhost:50256/trend' -d '{"user": "jalie", "intervalExpression": "1d", "periodExpression": "7d"}'
+'''
 
+'''javascript
 {
     "trendLine": {
         "2014-10-21T00:00:00.000+0000": 0.0,
@@ -20,3 +23,5 @@ curl -v -H "Content-Type: application/json" -XPOST 'http://localhost:50256/trend
         "2014-10-27T00:00:00.000+0000": 1.8136906252750293
     }
 }
+'''
+

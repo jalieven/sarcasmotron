@@ -12,6 +12,8 @@ import org.springframework.aop.support.DefaultPointcutAdvisor;
 import org.springframework.boot.CommandLineRunner;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.EnableAutoConfiguration;
+import org.springframework.boot.autoconfigure.data.elasticsearch.ElasticsearchRepositoriesAutoConfiguration;
+import org.springframework.boot.autoconfigure.data.mongo.MongoRepositoriesAutoConfiguration;
 import org.springframework.boot.builder.SpringApplicationBuilder;
 import org.springframework.boot.context.web.SpringBootServletInitializer;
 import org.springframework.context.annotation.Bean;
@@ -47,7 +49,7 @@ public class Sarcasmotron extends SpringBootServletInitializer implements Comman
     public CustomizableTraceInterceptor traceInterceptor() {
         CustomizableTraceInterceptor interceptor = new CustomizableTraceInterceptor();
         interceptor.setEnterMessage("Entering $[methodName]($[arguments]).");
-        interceptor.setExitMessage("Leaving $[methodName](..) with return value $[returnValue], took $[invocationTime]ms.");
+        interceptor.setExitMessage("PERFORMANCE:{$[methodName]} [$[invocationTime]]ms.");
         return interceptor;
     }
 

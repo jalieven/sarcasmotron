@@ -1,6 +1,7 @@
 package com.rizzo.sarcasmotron.domain.web;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
+import org.apache.commons.lang.builder.ToStringBuilder;
 import org.elasticsearch.common.joda.time.*;
 import org.elasticsearch.search.aggregations.bucket.histogram.DateHistogram;
 
@@ -74,4 +75,14 @@ public class TrendRequest {
     public DateHistogram.Interval getInterval() {
         return new DateHistogram.Interval(intervalExpression);
     }
+
+    @Override
+    public String toString() {
+        return new ToStringBuilder(this)
+                .append("user", user)
+                .append("intervalExpression", intervalExpression)
+                .append("periodExpression", periodExpression)
+                .toString();
+    }
+
 }

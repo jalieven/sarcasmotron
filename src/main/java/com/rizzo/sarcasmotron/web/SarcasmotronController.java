@@ -1,8 +1,10 @@
 package com.rizzo.sarcasmotron.web;
 
-import com.rizzo.sarcasmotron.domain.Sarcasm;
+import com.rizzo.sarcasmotron.domain.mongodb.Sarcasm;
 import com.rizzo.sarcasmotron.domain.web.Trend;
 import com.rizzo.sarcasmotron.domain.web.TrendRequest;
+import com.rizzo.sarcasmotron.domain.web.Vote;
+import com.rizzo.sarcasmotron.domain.web.VoteRequest;
 import com.rizzo.sarcasmotron.mongodb.MongoDBSarcasmRepository;
 import com.rizzo.sarcasmotron.trend.TrendCalculator;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -32,21 +34,33 @@ public class SarcasmotronController {
     }
 
     @RequestMapping(value = "/upvote", method = RequestMethod.POST)
-    public ResponseEntity<Boolean> upVote(@RequestParam(value = "id") String sarcasmId) {
-        final Sarcasm sarcasm = mongoDBSarcasmRepository.findOne(sarcasmId);
+    public @ResponseBody ResponseEntity<Vote> upVote(@RequestBody VoteRequest voteRequest) {
+        final Sarcasm sarcasm = mongoDBSarcasmRepository.findOne(voteRequest.getSarcasmId());
         // TODO get user from security details
         final boolean voteCast = sarcasm.upVote("jalie");
         mongoDBSarcasmRepository.save(sarcasm);
-        return new ResponseEntity<>(voteCast, HttpStatus.CREATED);
+        final ResponseEntity<Vote> responseEntity;
+        if (voteCast) {
+            responseEntity = new ResponseEntity<>(new Vote().setCast(true).setMessage("Upvote cast success!"), HttpStatus.CREATED);
+        } else {
+            responseEntity = new ResponseEntity<>(new Vote().setCast(false).setMessage("Vote already cast!"), HttpStatus.GONE);
+        }
+        return responseEntity;
     }
 
     @RequestMapping(value = "/downvote", method = RequestMethod.POST)
-    public ResponseEntity<Boolean> downVote(@RequestParam(value = "id") String sarcasmId) {
-        final Sarcasm sarcasm = mongoDBSarcasmRepository.findOne(sarcasmId);
+    public @ResponseBody ResponseEntity<Vote> downVote(@RequestBody VoteRequest voteRequest) {
+        final Sarcasm sarcasm = mongoDBSarcasmRepository.findOne(voteRequest.getSarcasmId());
         // TODO get user from security details
         final boolean voteCast = sarcasm.downVote("jalie");
         mongoDBSarcasmRepository.save(sarcasm);
-        return new ResponseEntity<>(voteCast, HttpStatus.CREATED);
+        final ResponseEntity<Vote> responseEntity;
+        if (voteCast) {
+            responseEntity = new ResponseEntity<>(new Vote().setCast(true).setMessage("Downvote cast success!"), HttpStatus.CREATED);
+        } else {
+            responseEntity = new ResponseEntity<>(new Vote().setCast(false).setMessage("Vote already cast!"), HttpStatus.GONE);
+        }
+        return responseEntity;
     }
 
 }

@@ -1,11 +1,17 @@
 package com.rizzo.sarcasmotron.aop;
 
-import com.rizzo.sarcasmotron.domain.Sarcasm;
+import com.google.common.collect.Lists;
+import com.rizzo.sarcasmotron.domain.elasticsearch.ESSarcasm;
+import com.rizzo.sarcasmotron.domain.elasticsearch.ESComment;
+import com.rizzo.sarcasmotron.domain.mongodb.Comment;
+import com.rizzo.sarcasmotron.domain.mongodb.Sarcasm;
 import com.rizzo.sarcasmotron.elasticsearch.ElasticsearchSarcasmRepository;
 import org.aopalliance.intercept.MethodInterceptor;
 import org.aopalliance.intercept.MethodInvocation;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
+
+import java.util.List;
 
 @Component
 public class ElasticSearchIndexInterceptor implements MethodInterceptor {
@@ -24,10 +30,10 @@ public class ElasticSearchIndexInterceptor implements MethodInterceptor {
         } else if("save".equals(methodName) && (methodInvocation.getArguments() != null && methodInvocation.getArguments().length == 1)) {
             if (methodInvocation.getArguments()[0] instanceof Sarcasm) {
                 Sarcasm sarcasm = (Sarcasm) methodInvocation.getArguments()[0];
-                elasticsearchSarcasmRepository.save(sarcasm);
+                elasticsearchSarcasmRepository.save(mapSarcasm(sarcasm));
             } else if(methodInvocation.getArguments()[0] instanceof Iterable) {
-                Iterable<Sarcasm> sarcasms = (Iterable<Sarcasm>) methodInvocation.getArguments()[0];
-                elasticsearchSarcasmRepository.save(sarcasms);
+                Iterable<com.rizzo.sarcasmotron.domain.mongodb.Sarcasm> sarcasms = (Iterable<Sarcasm>) methodInvocation.getArguments()[0];
+                elasticsearchSarcasmRepository.save(mapSarcasms(sarcasms));
             }
         } else if("delete".equals(methodName) && (methodInvocation.getArguments() != null && methodInvocation.getArguments().length == 1)) {
             if (methodInvocation.getArguments()[0] instanceof String) {
@@ -35,13 +41,39 @@ public class ElasticSearchIndexInterceptor implements MethodInterceptor {
                 elasticsearchSarcasmRepository.delete(id);
             } else if(methodInvocation.getArguments()[0] instanceof Sarcasm) {
                 Sarcasm sarcasm = (Sarcasm) methodInvocation.getArguments()[0];
-                elasticsearchSarcasmRepository.delete(sarcasm);
+                elasticsearchSarcasmRepository.delete(mapSarcasm(sarcasm));
             } else if(methodInvocation.getArguments()[0] instanceof Iterable) {
                 Iterable<Sarcasm> sarcasms = (Iterable<Sarcasm>) methodInvocation.getArguments()[0];
-                elasticsearchSarcasmRepository.delete(sarcasms);
+                elasticsearchSarcasmRepository.delete(mapSarcasms(sarcasms));
             }
         }
         return proceed;
+    }
+
+    private Iterable<ESSarcasm> mapSarcasms(Iterable<Sarcasm> mongoSarcasms) {
+        List<ESSarcasm> ESSarcasms = Lists.newArrayList();
+        for (Sarcasm mongoSarcasm : mongoSarcasms) {
+            ESSarcasms.add(mapSarcasm(mongoSarcasm));
+        }
+        return ESSarcasms;
+    }
+
+    private ESSarcasm mapSarcasm(Sarcasm mongoSarcasm) {
+        return new ESSarcasm()
+                .setId(mongoSarcasm.getId()).setQuote(mongoSarcasm.getQuote())
+                .setContext(mongoSarcasm.getContext()).setUser(mongoSarcasm.getUser())
+                .setVotes(mongoSarcasm.getVotes())
+                .setESComments(mapComments(mongoSarcasm.getComments()))
+                .setTimestamp(mongoSarcasm.getTimestamp());
+    }
+
+    private List<ESComment> mapComments(List<Comment> mongoSarcasmComments) {
+        List<ESComment> elasticsearchESComments = Lists.newArrayList();
+        for (Comment mongoSarcasmComment : mongoSarcasmComments) {
+            ESComment ESComment = new ESComment().setComment(mongoSarcasmComment.getComment()).setUser(mongoSarcasmComment.getUser()).setTimestamp(mongoSarcasmComment.getTimestamp());
+            elasticsearchESComments.add(ESComment);
+        }
+        return elasticsearchESComments;
     }
 
 }
