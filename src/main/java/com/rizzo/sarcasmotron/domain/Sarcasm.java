@@ -99,18 +99,23 @@ public class Sarcasm {
         return total;
     }
 
-    public Sarcasm upVote(String user) {
+    public boolean upVote(String user) {
         if(!getVotes().containsKey(user)) {
             getVotes().put(user, 1);
+            return true;
+        } else {
+            return false;
         }
-        return this;
+
     }
 
-    public Sarcasm downVote(String user) {
+    public boolean downVote(String user) {
         if(!getVotes().containsKey(user)) {
             getVotes().put(user, -1);
+            return true;
+        } else {
+            return false;
         }
-        return this;
     }
 
     public Map<String, Integer> getVotes() {

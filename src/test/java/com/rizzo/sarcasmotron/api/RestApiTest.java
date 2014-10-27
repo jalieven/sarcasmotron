@@ -56,7 +56,7 @@ public class RestApiTest {
 
     @After
     public void tearDown() {
-       mongoDBSarcasmRepository.deleteAll();
+        mongoDBSarcasmRepository.deleteAll();
     }
 
     @Test
@@ -79,8 +79,8 @@ public class RestApiTest {
                 .setContext("In a fight!")
                 .stamp()
                 .setUser("joost")
-                .upVote("jalie")
                 .addComment(comment);
+        sarcasm0.upVote("jalie");
 
         final Sarcasm sarcasm1 = new Sarcasm()
                 .setQuote("I work 40 hours a week to be this poor.")
@@ -90,8 +90,8 @@ public class RestApiTest {
 
         given()
                 .contentType(ContentType.JSON).body(sarcasm0)
-            .when().post("/sarcasms")
-            .then()
+                .when().post("/sarcasms")
+                .then()
                 .statusCode(HttpStatus.CREATED.value());
 
         given()
@@ -115,11 +115,12 @@ public class RestApiTest {
                 .setContext("In a fight!")
                 .stamp()
                 .setUser("jalie")
-                .upVote("jalie")
                 .addComment(comment);
+        sarcasm.upVote("jalie");
         this.mongoDBSarcasmRepository.deleteAll();
         this.mongoDBSarcasmRepository.save(sarcasm);
         final String sarcasmId = sarcasm.getId();
+
         when().get("/sarcasms/{id}", sarcasmId)
                 .then()
                 .statusCode(HttpStatus.OK.value())
@@ -141,8 +142,9 @@ public class RestApiTest {
                 .setContext("In a fight!")
                 .stamp()
                 .setUser("jalie")
-                .upVote("gert")
                 .addComment(comment);
+        sarcasm.upVote("gert");
+
         this.mongoDBSarcasmRepository.deleteAll();
         this.mongoDBSarcasmRepository.save(sarcasm);
         final String sarcasmId = sarcasm.getId();
@@ -151,14 +153,15 @@ public class RestApiTest {
                 .setQuote("This isn't an office. It's Hell with fluorescent lighting.")
                 .setContext("On a good office day!")
                 .stamp()
-                .setUser("joost")
-                .downVote("jalie");
+                .setUser("joost");
+        newSarcasm.downVote("jalie");
 
         given()
                 .contentType(ContentType.JSON).body(newSarcasm)
                 .when().put("/sarcasms/{id}", sarcasmId)
                 .then()
                 .statusCode(HttpStatus.NO_CONTENT.value());
+
         when().get("/sarcasms/{id}", sarcasmId)
                 .then()
                 .statusCode(HttpStatus.OK.value())
@@ -174,20 +177,22 @@ public class RestApiTest {
                 .setComment("Very funny! Cuz it's true!")
                 .stamp()
                 .setUser("jalie");
-        final Sarcasm initSarcasm = new Sarcasm()
+        final Sarcasm sarcasm = new Sarcasm()
                 .setQuote("I'm trying to imagine you with a personality.")
                 .setContext("In a fight!")
                 .stamp()
                 .setUser("jalie")
-                .upVote("jalie")
                 .addComment(comment);
+        sarcasm.upVote("jalie");
 
         this.mongoDBSarcasmRepository.deleteAll();
-        this.mongoDBSarcasmRepository.save(initSarcasm);
-        final String sarcasmId = initSarcasm.getId();
+        this.mongoDBSarcasmRepository.save(sarcasm);
+        final String sarcasmId = sarcasm.getId();
+
         when().delete("/sarcasms/{id}", sarcasmId)
                 .then()
                 .statusCode(HttpStatus.NO_CONTENT.value());
+
         assertEquals(0, this.mongoDBSarcasmRepository.findAll().size());
     }
 

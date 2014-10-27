@@ -20,6 +20,8 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.mongodb.core.MongoTemplate;
 import org.springframework.stereotype.Component;
 
+import java.text.ParseException;
+import java.util.Date;
 import java.util.List;
 import java.util.Map;
 
@@ -70,15 +72,15 @@ public class TrendCalculator {
 
     public Map<String, Double> calculateTrendLineForUser(String user,
                                                          ReadablePeriod baseLinePeriod,
-                                                         DateHistogram.Interval baseLineInterval) {
+                                                         DateHistogram.Interval baseLineInterval) throws ParseException {
         final DateTime now = DateTime.now();
-        DateTime oneMonthAgo = now.minus(baseLinePeriod);
+        DateTime past = now.minus(baseLinePeriod);
         final SearchResponse baseLine = client.prepareSearch(ES_INDEX)
                 .setTypes(ES_TYPE)
                 .setQuery(QueryBuilders.queryString("user: " + user))
                 .addAggregation(
                         AggregationBuilders.dateHistogram("histogramAggVotes")
-                                .extendedBounds(oneMonthAgo, now)
+                                .extendedBounds(past, now)
                                 .field("timestamp")
                                 .format(Sarcasm.TIMESTAMP_PATTERN)
                                 .minDocCount(0L)
@@ -92,25 +94,28 @@ public class TrendCalculator {
         DescriptiveStatistics descriptiveStatistics = new SynchronizedDescriptiveStatistics(7);
         assert(dateHistogram != null);
         for (DateHistogram.Bucket bucket : dateHistogram.getBuckets()) {
-            final long docCount = bucket.getDocCount();
-            Double voteCount = 0D;
-            if(docCount > 0) {
-                final Aggregations subAggregation = bucket.getAggregations();
-                final LongTerms votes = subAggregation.get("aggVotes");
-                final Terms.Bucket first = Iterables.getFirst(votes.getBuckets(), null);
-                assert first != null;
-                voteCount = first.getKeyAsNumber().doubleValue();
+            final Date date = Sarcasm.TIMESTAMP_FORMAT.parse(bucket.getKey());
+            if (!date.before(past.toDate())) {
+                final long docCount = bucket.getDocCount();
+                Double voteCount = 0D;
+                if(docCount > 0) {
+                    final Aggregations subAggregation = bucket.getAggregations();
+                    final LongTerms votes = subAggregation.get("aggVotes");
+                    final Terms.Bucket first = Iterables.getFirst(votes.getBuckets(), null);
+                    assert first != null;
+                    voteCount = first.getKeyAsNumber().doubleValue();
+                }
+                final double mean = descriptiveStatistics.getMean();
+                final double standardDeviation = descriptiveStatistics.getStandardDeviation();
+                Double zscore = (voteCount - mean) / standardDeviation;
+                if(!zscore.isNaN() && !zscore.isInfinite()) {
+                    rollingZScores.put(bucket.getKey(), zscore);
+                } else {
+                    rollingZScores.put(bucket.getKey(), 0D);
+                }
+                values.add(voteCount);
+                descriptiveStatistics.addValue(voteCount);
             }
-            final double mean = descriptiveStatistics.getMean();
-            final double standardDeviation = descriptiveStatistics.getStandardDeviation();
-            Double zscore = (voteCount - mean) / standardDeviation;
-            if(!zscore.isNaN() && !zscore.isInfinite()) {
-                rollingZScores.put(bucket.getKey(), zscore);
-            } else {
-                rollingZScores.put(bucket.getKey(), 0D);
-            }
-            values.add(voteCount);
-            descriptiveStatistics.addValue(voteCount);
         }
         return rollingZScores;
     }

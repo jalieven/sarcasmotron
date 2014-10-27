@@ -1,0 +1,3 @@
+- Write Web-UI for adding sarcasms and comments on sarcasms
+- Create metrics Web-UI panel for viewing overall user sarcastic trends (parameters: user, period, interval)
+- Integrate with sso security
