@@ -1,0 +1,40 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <title>Sarcasmotron statistics overview!</title>
+        <meta http-equiv="Content-Type" content="text/html; charset=UTF-8"/>
+        <link href="http://cdn.jsdelivr.net/webjars/bootstrap/3.2.0/css/bootstrap.min.css"
+              rel="stylesheet" media="screen" />
+    </head>
+    <body>
+        <p th:text="${greeting}">
+            Hello unknown user!
+        </p>
+        <p>Your sarcasm statistics for this week: </p>
+
+        From: <span th:text="${#dates.format(from, 'dd/MMM/yyyy HH:mm')}">past</span>
+        Until: <span th:text="${#dates.format(until, 'dd/MMM/yyyy HH:mm')}">now</span>
+
+        <table class="table" cellpadding="0" cellspacing="0" border="0" align="center">
+            <thead>
+                <tr>
+                    <th width="200">Votes</th>
+                    <th width="200">Sarcasms</th>
+                    <th width="200">Max Votes</th>
+                    <th width="200">Min Votes</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td align="center"><span th:text="${#numbers.formatDecimal(stats.sum,1,0)}">0</span></td>
+                    <td align="center"><span th:text="${stats.count}">0</span></td>
+                    <td align="center"><span th:text="${#numbers.formatDecimal(stats.max,1,0)}">0</span></td>
+                    <td align="center"><span th:text="${#numbers.formatDecimal(stats.min,1,0)}">0</span></td>
+                </tr>
+            </tbody>
+        </table>
+
+        Yours truely, <br/>
+        <b>Sarcasmobot</b>
+    </body>
+</html>

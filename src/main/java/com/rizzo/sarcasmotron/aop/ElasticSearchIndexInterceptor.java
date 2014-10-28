@@ -1,5 +1,6 @@
 package com.rizzo.sarcasmotron.aop;
 
+import com.google.common.collect.Iterables;
 import com.google.common.collect.Lists;
 import com.rizzo.sarcasmotron.domain.elasticsearch.ESComment;
 import com.rizzo.sarcasmotron.domain.elasticsearch.ESSarcasm;
@@ -32,8 +33,11 @@ public class ElasticSearchIndexInterceptor implements MethodInterceptor {
                 Sarcasm sarcasm = (Sarcasm) methodInvocation.getArguments()[0];
                 elasticsearchSarcasmRepository.save(mapSarcasm(sarcasm));
             } else if(methodInvocation.getArguments()[0] instanceof Iterable) {
-                Iterable<com.rizzo.sarcasmotron.domain.mongodb.Sarcasm> sarcasms = (Iterable<Sarcasm>) methodInvocation.getArguments()[0];
-                elasticsearchSarcasmRepository.save(mapSarcasms(sarcasms));
+                Iterable sarcasms = (Iterable) methodInvocation.getArguments()[0];
+                final Object first = Iterables.getFirst(sarcasms, null);
+                if(first != null && first instanceof Sarcasm) {
+                    elasticsearchSarcasmRepository.save(mapSarcasms((Iterable<Sarcasm>) sarcasms));
+                }
             }
         } else if("delete".equals(methodName) && (methodInvocation.getArguments() != null && methodInvocation.getArguments().length == 1)) {
             if (methodInvocation.getArguments()[0] instanceof String) {
@@ -43,8 +47,11 @@ public class ElasticSearchIndexInterceptor implements MethodInterceptor {
                 Sarcasm sarcasm = (Sarcasm) methodInvocation.getArguments()[0];
                 elasticsearchSarcasmRepository.delete(mapSarcasm(sarcasm));
             } else if(methodInvocation.getArguments()[0] instanceof Iterable) {
-                Iterable<Sarcasm> sarcasms = (Iterable<Sarcasm>) methodInvocation.getArguments()[0];
-                elasticsearchSarcasmRepository.delete(mapSarcasms(sarcasms));
+                Iterable sarcasms = (Iterable) methodInvocation.getArguments()[0];
+                final Object first = Iterables.getFirst(sarcasms, null);
+                if(first != null && first instanceof Sarcasm) {
+                    elasticsearchSarcasmRepository.delete(mapSarcasms((Iterable<Sarcasm>) sarcasms));
+                }
             }
         }
         return proceed;

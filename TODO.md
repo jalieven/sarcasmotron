@@ -1,8 +1,5 @@
 - Write Web-UI for adding sarcasms and comments on sarcasms
 - Create metrics Web-UI panel for viewing overall user sarcastic trends (parameters: user, period, interval)
 - Integrate with sso security
-- Configurable period summary/winner with email
-- Cleanup RestApiTest
-- Eternalize the weekly results
-- Add "from" and "to" members in Stats 
+- Configurable period summary/winner with email -> link inside mail to overview statistics users.
 - Search endpoint that delegates Query-string-query to ES

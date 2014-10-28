@@ -1,5 +1,6 @@
 package com.rizzo.sarcasmotron.api;
 
+import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Iterables;
 import com.jayway.restassured.RestAssured;
 import com.jayway.restassured.http.ContentType;
@@ -9,11 +10,14 @@ import com.rizzo.sarcasmotron.calc.VoteCalculator;
 import com.rizzo.sarcasmotron.domain.calc.VoteStats;
 import com.rizzo.sarcasmotron.domain.mongodb.Comment;
 import com.rizzo.sarcasmotron.domain.mongodb.Sarcasm;
+import com.rizzo.sarcasmotron.domain.mongodb.User;
 import com.rizzo.sarcasmotron.domain.web.StatsRequest;
 import com.rizzo.sarcasmotron.domain.web.TrendRequest;
 import com.rizzo.sarcasmotron.domain.web.VoteRequest;
 import com.rizzo.sarcasmotron.elasticsearch.ElasticsearchSarcasmRepository;
 import com.rizzo.sarcasmotron.mongodb.MongoDBSarcasmRepository;
+import com.rizzo.sarcasmotron.mongodb.MongoDBStatsRepository;
+import com.rizzo.sarcasmotron.mongodb.MongoDBUserRepository;
 import org.elasticsearch.common.joda.time.Days;
 import org.hamcrest.Matchers;
 import org.joda.time.DateTime;
@@ -34,6 +38,7 @@ import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
 import org.springframework.test.context.web.WebAppConfiguration;
 
 import java.math.BigDecimal;
+import java.util.Date;
 import java.util.List;
 
 import static com.jayway.restassured.RestAssured.given;
@@ -57,6 +62,12 @@ public class RestApiTest {
     private MongoDBSarcasmRepository mongoDBSarcasmRepository;
 
     @Autowired
+    private MongoDBUserRepository mongoDBUserRepository;
+
+    @Autowired
+    private MongoDBStatsRepository mongoDBStatsRepository;
+
+    @Autowired
     private ElasticsearchSarcasmRepository elasticsearchSarcasmRepository;
 
     @Autowired
@@ -66,14 +77,26 @@ public class RestApiTest {
 
     @Before
     public void setUp() throws InterruptedException {
+        LOGGER.warn("IntegrationTest running on port: " + port);
         RestAssured.port = port;
         mongoDBSarcasmRepository.deleteAll();
+        mongoDBUserRepository.deleteAll();
+        mongoDBStatsRepository.deleteAll();
+
+        List<User> users = ImmutableList.of(
+                new User().setLastLogin(new Date()).setGivenName("Jan").setSurName("Lievens").setNickName("jalie").setEmail("jan.lievens@gmail.com"),
+                new User().setLastLogin(new Date()).setGivenName("Joost").setSurName("Bouckenooghe").setNickName("joost").setEmail("jan.lievens@gmail.com"),
+                new User().setLastLogin(new Date()).setGivenName("Tom").setSurName("Van Gulck").setNickName("tom").setEmail("jan.lievens@gmail.com"),
+                new User().setLastLogin(new Date()).setGivenName("Gert").setSurName("Dewit").setNickName("gert").setEmail("jan.lievens@gmail.com"));
+        mongoDBUserRepository.save(users);
     }
 
-    @After
-    public void tearDown() throws InterruptedException {
-        //mongoDBSarcasmRepository.deleteAll();
-    }
+//    @After
+//    public void tearDown() {
+//        mongoDBSarcasmRepository.deleteAll();
+//        mongoDBUserRepository.deleteAll();
+//        mongoDBStatsRepository.deleteAll();
+//    }
 
     @Test
     public void testHome() throws Exception {
@@ -163,8 +186,8 @@ public class RestApiTest {
                 .contentType(ContentType.JSON).body(new VoteRequest().setSarcasmId(sarcasmId))
                 .when().post("/downvote")
                 .then().log().all()
-                .statusCode(HttpStatus.CREATED.value())
-                .body("cast", Matchers.is(true));
+                .statusCode(HttpStatus.GONE.value())
+                .body("message", Matchers.is("You cannot vote for your own sarcasm!"));
 
         given().log().all()
                 .contentType(ContentType.JSON).body(newSarcasm)
@@ -173,11 +196,18 @@ public class RestApiTest {
                 .statusCode(HttpStatus.NO_CONTENT.value());
 
         given().log().all()
+                .contentType(ContentType.JSON).body(new VoteRequest().setSarcasmId(sarcasmId))
+                .when().post("/downvote")
+                .then().log().all()
+                .statusCode(HttpStatus.CREATED.value())
+                .body("cast", Matchers.is(true));
+
+        given().log().all()
                 .when().get("/sarcasms/{id}", sarcasmId)
                 .then().log().all()
                 .statusCode(HttpStatus.OK.value())
                 .body("user", Matchers.is("joost"))
-                .body("voteTotal", Matchers.is(0))
+                .body("voteTotal", Matchers.is(-1))
                 .body("quote", Matchers.is("This isn't an office. It's Hell with fluorescent lighting."))
                 .body("comments", Matchers.empty());
     }
@@ -295,7 +325,6 @@ public class RestApiTest {
                 .statusCode(HttpStatus.GONE.value())
                 .body("cast", Matchers.is(false))
                 .body("message", Matchers.is("Vote already cast!"));
-
 
     }
 
@@ -419,6 +448,8 @@ public class RestApiTest {
                 .body("voteStats.gert.count", Matchers.is(0))
                 .body("voteStats.gert.max", Matchers.is("-Infinity"))
                 .body("voteStats.gert.min", Matchers.is("Infinity"));
+
+        Thread.sleep(500000000);
 
     }
 

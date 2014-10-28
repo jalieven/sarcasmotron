@@ -23,6 +23,14 @@ spring:
       host: localhost
       port: 27017
       database: sarcasmotron
+  thymeleaf:
+    excludedViewNames: /resources/static/*
+    prefix: classpath:/templates/
+    suffix: .html
+    mode: HTML5
+    encoding: UTF-8
+    content-type: text/html
+    cache: true
 
 # rest interface
 server:
@@ -35,7 +43,15 @@ endpoints:
 scheduling:
   # every friday at 15:00:
   # we calculate the most sarcastic person of the week
-  winner-calculation:
-    # cron: 0 0 15 * * 5
-    cron: '*/10 * * * * *'
+  winnerCalculation:
+    cron: 0 0 15 * * 5
+    # cron: '*/10 * * * * *'
     period: '1w'
+
+mail:
+  host: mail-101.mmis.be
+  port: 25
+  protocol: smtp
+  winnerCalculation:
+    fromAddress: help@milieuinfo.be
+    subject: Weekoverzicht Sarcasmotron

@@ -4,6 +4,7 @@ import com.rizzo.sarcasmotron.aop.ElasticSearchIndexInterceptor;
 import com.rizzo.sarcasmotron.calc.VoteCalculator;
 import com.rizzo.sarcasmotron.task.ScheduledTasks;
 import com.rizzo.sarcasmotron.web.SarcasmotronController;
+import com.rizzo.sarcasmotron.web.SarcasmotronRestController;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.aop.Advisor;
@@ -21,11 +22,13 @@ import org.springframework.context.annotation.ComponentScan;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.data.elasticsearch.repository.config.EnableElasticsearchRepositories;
 import org.springframework.data.mongodb.repository.config.EnableMongoRepositories;
+import org.springframework.mail.javamail.JavaMailSenderImpl;
 import org.springframework.scheduling.annotation.EnableScheduling;
 import org.springframework.scheduling.annotation.SchedulingConfigurer;
 import org.springframework.scheduling.config.ScheduledTaskRegistrar;
 import org.springframework.scheduling.support.CronTrigger;
 
+import javax.mail.MessagingException;
 import java.util.concurrent.Executor;
 import java.util.concurrent.Executors;
 
@@ -39,11 +42,20 @@ public class Sarcasmotron extends SpringBootServletInitializer implements Comman
 
     private static final Logger LOGGER = LoggerFactory.getLogger(Sarcasmotron.class);
 
-    @Value(value = "${scheduling.winner-calculation.cron}")
+    @Value(value = "${scheduling.winnerCalculation.cron}")
     private String winnerCalculationCron;
 
-    @Value(value = "${scheduling.winner-calculation.period}")
+    @Value(value = "${scheduling.winnerCalculation.period}")
     private String winnerCalculationPeriod;
+
+    @Value(value = "${mail.host}")
+    private String mailHost;
+
+    @Value(value = "${mail.port}")
+    private Integer mailPort;
+
+    @Value(value = "${mail.protocol}")
+    private String mailProtocol;
 
     @Override
     public void run(String... args) throws Exception {
@@ -92,6 +104,12 @@ public class Sarcasmotron extends SpringBootServletInitializer implements Comman
     }
 
     @Bean
+    public SarcasmotronRestController sarcasmotronRestController() {
+        return new SarcasmotronRestController();
+    }
+
+
+    @Bean
     public SarcasmotronController sarcasmotronController() {
         return new SarcasmotronController();
     }
@@ -102,7 +120,11 @@ public class Sarcasmotron extends SpringBootServletInitializer implements Comman
         taskRegistrar.addTriggerTask(
                 new Runnable() {
                     public void run() {
-                        scheduledTasks().calculateWinner();
+                        try {
+                            scheduledTasks().calculateWinner();
+                        } catch (MessagingException e) {
+                            LOGGER.error("Fault while calculating winner!", e);
+                        }
                     }
                 },
                 new CronTrigger(winnerCalculationCron)
@@ -117,5 +139,14 @@ public class Sarcasmotron extends SpringBootServletInitializer implements Comman
     @Bean
     public ScheduledTasks scheduledTasks() {
         return new ScheduledTasks(winnerCalculationPeriod);
+    }
+
+    @Bean
+    public JavaMailSenderImpl javaMailSender() {
+        final JavaMailSenderImpl mailSender = new JavaMailSenderImpl();
+        mailSender.setHost(mailHost);
+        mailSender.setPort(mailPort);
+        mailSender.setProtocol(mailProtocol);
+        return mailSender;
     }
 }
