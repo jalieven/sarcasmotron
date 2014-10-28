@@ -62,8 +62,9 @@ public class ElasticSearchIndexInterceptor implements MethodInterceptor {
         return new ESSarcasm()
                 .setId(mongoSarcasm.getId()).setQuote(mongoSarcasm.getQuote())
                 .setContext(mongoSarcasm.getContext()).setUser(mongoSarcasm.getUser())
+                .setCreator(mongoSarcasm.getCreator())
                 .setVotes(mongoSarcasm.getVotes())
-                .setESComments(mapComments(mongoSarcasm.getComments()))
+                .setComments(mapComments(mongoSarcasm.getComments()))
                 .setTimestamp(mongoSarcasm.getTimestamp());
     }
 

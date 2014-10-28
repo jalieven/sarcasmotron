@@ -29,6 +29,8 @@ public class ESSarcasm implements Serializable {
 
     private String user;
 
+    private String creator;
+
     private String quote;
 
     private String context;
@@ -74,6 +76,15 @@ public class ESSarcasm implements Serializable {
 
     public ESSarcasm setUser(String user) {
         this.user = user;
+        return this;
+    }
+
+    public String getCreator() {
+        return creator;
+    }
+
+    public ESSarcasm setCreator(String creator) {
+        this.creator = creator;
         return this;
     }
 
@@ -134,20 +145,20 @@ public class ESSarcasm implements Serializable {
         return this;
     }
 
-    public List<ESComment> getESComments() {
+    public List<ESComment> getComments() {
         if(this.ESComments == null) {
             this.ESComments = Lists.newArrayList();
         }
         return this.ESComments;
     }
 
-    public ESSarcasm setESComments(List<ESComment> ESComments) {
+    public ESSarcasm setComments(List<ESComment> ESComments) {
         this.ESComments = ESComments;
         return this;
     }
 
     public ESSarcasm addComment(ESComment ESComment) {
-        getESComments().add(ESComment);
+        getComments().add(ESComment);
         return this;
     }
 
@@ -157,10 +168,11 @@ public class ESSarcasm implements Serializable {
                 .append("id", id)
                 .append("timestamp", timestamp)
                 .append("user", user)
+                .append("creator", creator)
                 .append("quote", quote)
                 .append("context", context)
                 .append("votes", votes)
-                .append("comments", ESComments)
+                .append("ESComments", ESComments)
                 .toString();
     }
 }

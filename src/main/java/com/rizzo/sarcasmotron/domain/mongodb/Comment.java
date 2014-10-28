@@ -1,6 +1,7 @@
 package com.rizzo.sarcasmotron.domain.mongodb;
 
 import org.apache.commons.lang.builder.ToStringBuilder;
+import org.joda.time.DateTime;
 
 import java.io.Serializable;
 import java.text.SimpleDateFormat;
@@ -33,8 +34,8 @@ public class Comment implements Serializable {
         this.timestamp = timestamp;
     }
 
-    public Comment stamp(Date date) {
-        this.timestamp = TIMESTAMP_FORMAT.format(date);
+    public Comment stamp(DateTime date) {
+        this.timestamp = TIMESTAMP_FORMAT.format(date.toDate());
         return this;
     }
 

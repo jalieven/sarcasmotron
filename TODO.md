@@ -5,3 +5,4 @@
 - Cleanup RestApiTest
 - Eternalize the weekly results
 - Add "from" and "to" members in Stats 
+- Search endpoint that delegates Query-string-query to ES

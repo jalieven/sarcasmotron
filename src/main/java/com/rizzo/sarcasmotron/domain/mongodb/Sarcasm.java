@@ -27,6 +27,8 @@ public class Sarcasm implements Serializable {
 
     private String user;
 
+    private String creator;
+
     private String quote;
 
     private String context;
@@ -71,6 +73,15 @@ public class Sarcasm implements Serializable {
 
     public Sarcasm setUser(String user) {
         this.user = user;
+        return this;
+    }
+
+    public String getCreator() {
+        return creator;
+    }
+
+    public Sarcasm setCreator(String creator) {
+        this.creator = creator;
         return this;
     }
 
@@ -154,6 +165,7 @@ public class Sarcasm implements Serializable {
                 .append("id", id)
                 .append("timestamp", timestamp)
                 .append("user", user)
+                .append("creator", creator)
                 .append("quote", quote)
                 .append("context", context)
                 .append("votes", votes)

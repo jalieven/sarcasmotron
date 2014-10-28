@@ -35,7 +35,7 @@ public class SarcasmotronController {
 
     @RequestMapping(value = "/votestats", method = RequestMethod.POST)
     public @ResponseBody ResponseEntity<Stats> stats(@RequestBody StatsRequest statsRequest) throws ParseException {
-        if (StringUtils.isNotBlank(statsRequest.getUser())) {
+        if (!"*".equals(statsRequest.getUser())) {
             final VoteStats voteStats = voteCalculator.calculateVoteStatsForUser(
                     statsRequest.getUser(),
                     statsRequest.getPeriod());
@@ -49,8 +49,8 @@ public class SarcasmotronController {
                         distinctUser,
                         statsRequest.getPeriod());
                 stats.addVoteStats(distinctUser, voteStats);
-                stats.sort();
             }
+            stats.sort();
             return new ResponseEntity<>(stats, HttpStatus.OK);
         }
     }
@@ -58,14 +58,19 @@ public class SarcasmotronController {
     @RequestMapping(value = "/upvote", method = RequestMethod.POST)
     public @ResponseBody ResponseEntity<Vote> upVote(@RequestBody VoteRequest voteRequest) {
         final Sarcasm sarcasm = mongoDBSarcasmRepository.findOne(voteRequest.getSarcasmId());
-        // TODO get user from security details
-        final boolean voteCast = sarcasm.upVote("jalie");
-        mongoDBSarcasmRepository.save(sarcasm);
+        // TODO get user 'jalie' from security details
         final ResponseEntity<Vote> responseEntity;
-        if (voteCast) {
-            responseEntity = new ResponseEntity<>(new Vote().setCast(true).setMessage("Upvote cast success!"), HttpStatus.CREATED);
+        // users can't vote for their own sarcasm!
+        if (!"jalie".equals(sarcasm.getUser())) {
+            final boolean voteCast = sarcasm.upVote("jalie");
+            mongoDBSarcasmRepository.save(sarcasm);
+            if (voteCast) {
+                responseEntity = new ResponseEntity<>(new Vote().setCast(true).setMessage("Upvote cast success!"), HttpStatus.CREATED);
+            } else {
+                responseEntity = new ResponseEntity<>(new Vote().setCast(false).setMessage("Vote already cast!"), HttpStatus.GONE);
+            }
         } else {
-            responseEntity = new ResponseEntity<>(new Vote().setCast(false).setMessage("Vote already cast!"), HttpStatus.GONE);
+            responseEntity = new ResponseEntity<>(new Vote().setCast(false).setMessage("You cannot vote for your own sarcasm!"), HttpStatus.GONE);
         }
         return responseEntity;
     }
@@ -73,14 +78,19 @@ public class SarcasmotronController {
     @RequestMapping(value = "/downvote", method = RequestMethod.POST)
     public @ResponseBody ResponseEntity<Vote> downVote(@RequestBody VoteRequest voteRequest) {
         final Sarcasm sarcasm = mongoDBSarcasmRepository.findOne(voteRequest.getSarcasmId());
-        // TODO get user from security details
-        final boolean voteCast = sarcasm.downVote("jalie");
-        mongoDBSarcasmRepository.save(sarcasm);
+        // TODO get user 'jalie' from security details
         final ResponseEntity<Vote> responseEntity;
-        if (voteCast) {
-            responseEntity = new ResponseEntity<>(new Vote().setCast(true).setMessage("Downvote cast success!"), HttpStatus.CREATED);
+        // users can't vote for their own sarcasm!
+        if (!"jalie".equals(sarcasm.getUser())) {
+            final boolean voteCast = sarcasm.downVote("jalie");
+            mongoDBSarcasmRepository.save(sarcasm);
+            if (voteCast) {
+                responseEntity = new ResponseEntity<>(new Vote().setCast(true).setMessage("Downvote cast success!"), HttpStatus.CREATED);
+            } else {
+                responseEntity = new ResponseEntity<>(new Vote().setCast(false).setMessage("Vote already cast!"), HttpStatus.GONE);
+            }
         } else {
-            responseEntity = new ResponseEntity<>(new Vote().setCast(false).setMessage("Vote already cast!"), HttpStatus.GONE);
+            responseEntity = new ResponseEntity<>(new Vote().setCast(false).setMessage("You cannot vote for your own sarcasm!"), HttpStatus.GONE);
         }
         return responseEntity;
     }
