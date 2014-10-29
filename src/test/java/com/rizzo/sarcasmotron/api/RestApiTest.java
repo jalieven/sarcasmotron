@@ -449,8 +449,6 @@ public class RestApiTest {
                 .body("voteStats.gert.max", Matchers.is("-Infinity"))
                 .body("voteStats.gert.min", Matchers.is("Infinity"));
 
-        Thread.sleep(500000000);
-
     }
 
 }
