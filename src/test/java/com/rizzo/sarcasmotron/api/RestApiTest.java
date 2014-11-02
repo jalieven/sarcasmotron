@@ -47,6 +47,8 @@ import static com.jayway.restassured.config.RestAssuredConfig.newConfig;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 
+// TODO make sure when security is in place to try to (up/down)vote as "joost" and make it all work
+
 @RunWith(SpringJUnit4ClassRunner.class)
 @SpringApplicationConfiguration(classes = Sarcasmotron.class)
 @WebAppConfiguration
@@ -310,7 +312,6 @@ public class RestApiTest {
         mongoDBSarcasmRepository.save(sarcasm);
         LOGGER.debug("Generated Sarcasm id: " + sarcasm.getId());
 
-        // TODO make sure when security is in place to try to (up/down)vote as "joost"
         given().log().all()
                 .contentType(ContentType.JSON).body(new VoteRequest().setSarcasmId(sarcasm.getId()))
                 .when().post("/upvote")
@@ -448,6 +449,7 @@ public class RestApiTest {
                 .body("voteStats.gert.count", Matchers.is(0))
                 .body("voteStats.gert.max", Matchers.is("-Infinity"))
                 .body("voteStats.gert.min", Matchers.is("Infinity"));
+
 
     }
 

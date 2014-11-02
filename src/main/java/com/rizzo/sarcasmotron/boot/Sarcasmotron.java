@@ -2,6 +2,7 @@ package com.rizzo.sarcasmotron.boot;
 
 import com.rizzo.sarcasmotron.aop.ElasticSearchIndexInterceptor;
 import com.rizzo.sarcasmotron.calc.VoteCalculator;
+import com.rizzo.sarcasmotron.security.LoginEventHandler;
 import com.rizzo.sarcasmotron.task.ScheduledTasks;
 import com.rizzo.sarcasmotron.web.SarcasmotronController;
 import com.rizzo.sarcasmotron.web.SarcasmotronRestController;
@@ -20,6 +21,7 @@ import org.springframework.boot.context.web.SpringBootServletInitializer;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.ComponentScan;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.context.annotation.ImportResource;
 import org.springframework.data.elasticsearch.repository.config.EnableElasticsearchRepositories;
 import org.springframework.data.mongodb.repository.config.EnableMongoRepositories;
 import org.springframework.mail.javamail.JavaMailSenderImpl;
@@ -36,6 +38,7 @@ import java.util.concurrent.Executors;
 @EnableAutoConfiguration
 @ComponentScan
 @EnableScheduling
+@ImportResource("classpath:openam/security-ctx.xml")
 @EnableMongoRepositories(value= {"com.rizzo.sarcasmotron.mongodb"})
 @EnableElasticsearchRepositories(value = {"com.rizzo.sarcasmotron.elasticsearch"})
 public class Sarcasmotron extends SpringBootServletInitializer implements CommandLineRunner, SchedulingConfigurer {
@@ -108,7 +111,6 @@ public class Sarcasmotron extends SpringBootServletInitializer implements Comman
         return new SarcasmotronRestController();
     }
 
-
     @Bean
     public SarcasmotronController sarcasmotronController() {
         return new SarcasmotronController();
@@ -149,4 +151,10 @@ public class Sarcasmotron extends SpringBootServletInitializer implements Comman
         mailSender.setProtocol(mailProtocol);
         return mailSender;
     }
+
+    @Bean
+    public LoginEventHandler loginEventHandler() {
+        return new LoginEventHandler();
+    }
+
 }

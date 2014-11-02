@@ -32,6 +32,11 @@ spring:
     content-type: text/html
     cache: true
 
+openam:
+  serverurl: http://msb-on-101.mmis.be:9880/sso
+  username:
+  secret:
+
 # rest interface
 server:
   port: 8080

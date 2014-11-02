@@ -5,8 +5,6 @@ import org.springframework.data.annotation.Id;
 
 import java.util.Date;
 
-// TODO when someone logs in: persist this POJO in MongoDB.
-// will be used for user selection on the UI
 public class User {
 
     @Id
