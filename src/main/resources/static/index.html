@@ -1,60 +1,32 @@
-<!DOCTYPE html>
-<html data-ng-app="sarcasmotron">
+<!doctype html>
+<html>
 <head>
     <title>Sarcasmotron</title>
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <link rel="stylesheet" type="text/css" href="/webjars/bootstrap/3.2.0/css/bootstrap.min.css" />
-    <link rel="stylesheet" type="text/css" href="/webjars/font-awesome/4.2.0/css/font-awesome.min.css" />
+
+    <meta name="viewport"
+          content="width=device-width, minimum-scale=1.0, initial-scale=1.0, user-scalable=yes">
+    <meta name="mobile-web-app-capable" content="yes">
+
+    <script src="./components/platform/platform.js"></script>
+    <script src="./components/moment/moment.js"></script>
+
+    <link rel="import" href="./components/font-roboto/roboto.html">
+    <link rel="import" href="sarcasmotron.html">
+
+    <style>
+        html,body {
+            height: 100%;
+            margin: 0;
+            background-color: #d9e2dd;
+            font-family: 'RobotoDraft', sans-serif;
+        }
+    </style>
 </head>
-<body>
-<script type="text/javascript" src="/webjars/jquery/2.1.1/jquery.min.js"></script>
-<script type="text/javascript" src="/webjars/angularjs/1.2.26/angular.min.js"></script>
-<script type="text/javascript" src="/webjars/angularjs/1.2.26/angular-route.min.js"></script>
-<script type="text/javascript" src="/webjars/angularjs/1.2.26/angular-resource.min.js"></script>
-<script type="text/javascript" src="/webjars/d3js/3.4.11/d3.min.js"></script>
-<script type="text/javascript" src="/js/sarcasmotron.js"></script>
-<script type="text/javascript" src="/js/services.js"></script>
 
-<div id="navbar" class="navbar navbar-default" role="navigation">
-    <div class="navbar-header">
-        <button type="button" class="navbar-toggle" data-toggle="collapse"
-                data-target=".navbar-collapse">
-            <span class="icon-bar"></span> <span class="icon-bar"></span> <span
-                class="icon-bar"></span>
-        </button>
-        <a class="navbar-brand" data-ng-href="/#/home"> Sarcasmotron</a>
-    </div>
-    <div class="navbar-collapse collapse">
-        <ul class="nav navbar-nav">
-            <li>
-                <a data-ng-href="/#/home">
-                    <i class="fa fa-home fa-lg pull-left"></i> Home
-                </a>
-            </li>
-            <li>
-                <a data-ng-href="/#/stream">
-                    <i class="fa fa-list fa-lg pull-left"></i> Sarcasms
-                </a>
-            </li>
-            <li>
-                <a data-ng-href="/#/new">
-                    <i class="fa fa-edit fa-lg pull-left"></i> New
-                </a>
-            </li>
-            <li>
-                <a data-ng-href="/#/stats">
-                    <i class="fa fa-bar-chart fa-lg pull-left"></i> Statistics
-                </a>
-            </li>
-        </ul>
-    </div>
-</div>
-<div class="jumbotron">
+<body unresolved>
 
-    <div data-ng-view=""></div>
+    <sarcasmotron-app></sarcasmotron-app>
 
-</div>
-
-<script type="text/javascript" src="/webjars/bootstrap/3.2.0/js/bootstrap.min.js"></script>
 </body>
+
 </html>

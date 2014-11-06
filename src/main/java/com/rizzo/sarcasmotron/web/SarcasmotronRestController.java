@@ -120,4 +120,15 @@ public class SarcasmotronRestController {
         return responseEntity;
     }
 
+    @RequestMapping(value = "/tovote", method = RequestMethod.GET)
+    public @ResponseBody ResponseEntity<List<Sarcasm>> toVote() {
+        final ResponseEntity<List<Sarcasm>> responseEntity;
+        final SecurityContext securityContext = this.securityContextHolderStrategy.getContext();
+        final Authentication authentication = securityContext.getAuthentication();
+        final OpenAMUserdetails details = (OpenAMUserdetails) authentication.getDetails();
+        final String nickname = details.getUsername();
+        final List<Sarcasm> sarcasmsToVote = voteCalculator.findToVote(nickname);
+        return new ResponseEntity<List<Sarcasm>>(sarcasmsToVote, HttpStatus.OK);
+    }
+
 }

@@ -3,3 +3,5 @@
 - Integrate with sso security
 - Configurable period summary/winner with email -> link inside mail to overview statistics users.
 - Search endpoint that delegates Query-string-query to ES
+- Add tovote functionality to CLI
+- Add avatar to user and return it along

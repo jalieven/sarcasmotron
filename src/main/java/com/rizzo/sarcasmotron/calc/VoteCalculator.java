@@ -21,6 +21,7 @@ import org.elasticsearch.search.aggregations.bucket.terms.Terms;
 import org.elasticsearch.search.aggregations.metrics.stats.Stats;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.mongodb.core.MongoTemplate;
+import org.springframework.data.mongodb.core.query.BasicQuery;
 import org.springframework.stereotype.Component;
 
 import java.text.ParseException;
@@ -98,7 +99,6 @@ public class VoteCalculator {
         return mongoTemplate.getCollection(MONGO_COLLECTION).distinct("user");
     }
 
-
     public VoteStats calculateVoteStatsForUser(String user, ReadablePeriod period) {
         final DateTime now = DateTime.now();
         DateTime past = now.minus(period);
@@ -113,5 +113,9 @@ public class VoteCalculator {
                 ).get();
         final Stats esStats = stats.getAggregations().get("voteStats");
         return new VoteStats().setCount(esStats.getCount()).setMax(esStats.getMax()).setMin(esStats.getMin()).setSum(esStats.getSum());
+    }
+
+    public List<Sarcasm> findToVote(String nickname) {
+        return mongoTemplate.find(new BasicQuery("{votes."+ nickname + ": null, user: {$ne: '" + nickname + "'}}"), Sarcasm.class);
     }
 }

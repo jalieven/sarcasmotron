@@ -1,0 +1,119 @@
+<link rel="import" href="./components/polymer/polymer.html">
+<link rel="import" href="./components/core-icon-button/core-icon-button.html">
+<link rel="import" href="./components/core-icons/editor-icons.html">
+<link rel="import" href="./components/paper-shadow/paper-shadow.html">
+<link rel="import" href="./components/paper-icon-button/paper-icon-button.html">
+
+<polymer-element name="sarcasm-card">
+    <template>
+        <style>
+            :host {
+                display: block;
+                position: relative;
+                background-color: white;
+                padding: 20px;
+                width: 100%;
+                font-size: 1.2rem;
+                font-weight: 300;
+            }
+            .card-header {
+                margin-bottom: 10px;
+            }
+            polyfill-next-selector { content: '.card-header h2'; }
+            .card-header ::content h2 {
+                margin: 0;
+                font-size: 1.8rem;
+                font-weight: 300;
+            }
+            polyfill-next-selector { content: '.card-header img'; }
+            .card-header ::content img {
+                width: 70px;
+                border-radius: 50%;
+                margin: 10px;
+            }
+            #action-buttons {
+                position: absolute;
+                top: 4px;
+                right: 4px;
+                color: #636363;
+            }
+            :host([favorite]) #favicon {
+                color: #da4336;
+            }
+            :host([votedUp]) #thumb-up {
+                color: #da4336;
+            }
+            :host([votedDown]) #thumb-down {
+                color: #da4336;
+            }
+        </style>
+
+        <paper-shadow z="1">
+            <div class="card-header" layout horizontal center>
+                <content select="img"></content>
+                <content select="h2"></content>
+            </div>
+
+            <div id="action-buttons" layout horizontal>
+                <paper-icon-button
+                        id="thumb-up"
+                        icon="thumb-up"
+                        disabled?="{{ votedDown }}"
+                        on-tap="{{voteUp}}">
+                </paper-icon-button>
+
+                <paper-icon-button
+                        id="thumb-down"
+                        icon="thumb-down"
+                        disabled?="{{ votedUp }}"
+                        on-tap="{{voteDown}}">
+                </paper-icon-button>
+
+                <paper-icon-button
+                        id="favicon"
+                        icon="favorite"
+                        on-tap="{{favorited}}">
+                </paper-icon-button>
+
+                <paper-icon-button
+                        id="comment"
+                        icon="editor:mode-comment">
+                </paper-icon-button>
+            </div>
+
+        </paper-shadow>
+
+        <content></content>
+
+    </template>
+    <script>
+        Polymer({
+            publish: {
+                favorite: {
+                    value: false,
+                    reflect: true
+                },
+                votedUp: {
+                    value: false,
+                    reflect: true
+                },
+                votedDown: {
+                    value: false,
+                    reflect: true
+                }
+            },
+            favorited: function(event, detail, sender) {
+                this.favorite = !this.favorite;
+                this.fire('favorited');
+            },
+            voteUp: function(event, detail, sender) {
+                this.votedUp = !this.votedUp;
+                this.fire('vote-up');
+            },
+            voteDown: function(event, detail, sender) {
+                this.votedDown = !this.votedDown;
+                this.fire('vote-down');
+            }
+        });
+    </script>
+</polymer-element>
