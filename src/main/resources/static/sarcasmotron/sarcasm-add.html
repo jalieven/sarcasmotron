@@ -1,0 +1,66 @@
+<link rel="import" href="../components/polymer/polymer.html">
+<link rel="import" href="../components/core-dropdown/core-dropdown.html">
+<link rel="import" href="../components/paper-input/paper-input.html">
+<link rel="import" href="../components/paper-fab/paper-fab.html">
+<link rel="import" href="../post-service/post-service.html">
+
+<polymer-element name="sarcasm-add">
+    <template>
+        <style>
+            :host {
+                display: block;
+                position: relative;
+                background-color: white;
+                padding: 20px;
+                width: 100%;
+                font-size: 1.2rem;
+                font-weight: 300;
+            }
+            .card-header {
+                margin-bottom: 5px;
+            }
+            polyfill-next-selector { content: '.card-header h2'; }
+            .card-header ::content h2 {
+                margin: 0;
+                font-size: 1.8rem;
+                font-weight: 300;
+            }
+            polyfill-next-selector { content: '.card-header img'; }
+            .card-header ::content img {
+                width: 70px;
+                border-radius: 50%;
+                margin: 10px;
+            }
+            .context {
+                opacity: 0.3;
+            }
+            paper-fab.green {
+                background: #259b24;
+            }
+
+        </style>
+
+        <paper-shadow z="1">
+            <div id="new-sarcasm">
+                <div class="card-header" layout horizontal center>
+                    <h3>Create a new Sarcasm</h3>
+                    <div flex></div>
+                    <paper-fab icon="add" class="green" disabled></paper-fab>
+                </div>
+                <paper-input multiline label="User" value="{{user}}" floatingLabel></paper-input>
+                <p class="context"><b>right about now</b></p>
+                <paper-input multiline label="Sarcasm" value="{{sarcasm}}" floatingLabel></paper-input>
+                <i><paper-input multiline label="Context" value="{{context}}" floatingLabel></paper-input></i>
+
+            </div>
+        </paper-shadow>
+
+    </template>
+
+    <script>
+        Polymer({
+
+        });
+    </script>
+
+</polymer-element>

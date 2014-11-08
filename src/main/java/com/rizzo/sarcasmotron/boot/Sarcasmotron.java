@@ -2,6 +2,7 @@ package com.rizzo.sarcasmotron.boot;
 
 import com.rizzo.sarcasmotron.aop.ElasticSearchIndexInterceptor;
 import com.rizzo.sarcasmotron.calc.VoteCalculator;
+import com.rizzo.sarcasmotron.cors.CORSFilter;
 import com.rizzo.sarcasmotron.security.LoginEventHandler;
 import com.rizzo.sarcasmotron.task.ScheduledTasks;
 import com.rizzo.sarcasmotron.web.SarcasmotronController;
@@ -157,4 +158,8 @@ public class Sarcasmotron extends SpringBootServletInitializer implements Comman
         return new LoginEventHandler();
     }
 
+    @Bean
+    public CORSFilter corsFilter() {
+        return new CORSFilter();
+    }
 }

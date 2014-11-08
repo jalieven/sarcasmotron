@@ -1,0 +1,185 @@
+<link rel="import" href="../components/core-scroll-header-panel/core-scroll-header-panel.html">
+<link rel="import" href="../components/core-toolbar/core-toolbar.html">
+<link rel="import" href="../components/core-tooltip/core-tooltip.html">
+<link rel="import" href="../components/core-input/core-input.html">
+<link rel="import" href="../components/core-item/core-item.html">
+<link rel="import" href="../components/core-menu/core-menu.html">
+<link rel="import" href="../components/core-menu-button/core-menu-button.html">
+<link rel="import" href="../components/core-animated-pages/core-animated-pages.html">
+<link rel="import" href="../components/core-animated-pages/transitions/slide-up.html">
+<link rel="import" href="../components/core-animated-pages/transitions/slide-from-right.html">
+<link rel="import" href="../components/paper-shadow/paper-shadow.html">
+<link rel="import" href="../components/paper-input/paper-input.html">
+<link rel="import" href="../components/flatiron-director/flatiron-director.html">
+<link rel="import" href="../post-service/post-service.html">
+<link rel="import" href="sarcasm-stream.html">
+<link rel="import" href="sarcasm-add.html">
+
+<polymer-element name="sarcasmotron-app">
+    <template>
+        <style>
+            core-scroll-header-panel {
+                position: absolute;
+                top: 0;
+                right: 0;
+                bottom: 0;
+                left: 0;
+            }
+            core-toolbar {
+                color: #f1f1f1;
+                fill: #f1f1f1;
+                background-color: transparent;
+            }
+            /* background for toolbar when it is at its full size */
+            core-scroll-header-panel::shadow #headerBg {
+                background-image: url(../images/header-background-02.png);
+            }
+
+            /* background for toolbar when it is condensed */
+            core-scroll-header-panel::shadow #condensedHeaderBg {
+                background-color: #216c89;
+                /*background-color: #72bed6;*/
+                /*background-color: #36353a;*/
+                /*background-color: #d9e2dd;*/
+                /*background-color: #bd3c37;*/
+            }
+            .content {
+                width: 80%;
+                margin: 50px auto;
+            }
+            @media (min-width: 481px) {
+                .content {
+                    width: 400px;
+                }
+            }
+            #button-bar {
+                width: 100%;
+            }
+
+        </style>
+
+        <style shim-shadowdom>
+            core-tooltip.fancy::shadow .core-tooltip {
+                opacity: 0;
+                -webkit-transition: all 300ms cubic-bezier(1.92,0,.99,1.07);
+                transition: all 300ms cubic-bezier(0,1.92,.99,1.07);
+                -webkit-transform: translate3d(0, -10px, 0);
+                transform: translate3d(0, -10px, 0);
+            }
+
+            core-tooltip.fancy:hover::shadow .core-tooltip,
+            core-tooltip.fancy:focus::shadow .core-tooltip {
+                opacity: 1;
+                -webkit-transform: translate3d(0, 0, 0);
+                transform: translate3d(0, 0, 0);
+            }
+        </style>
+
+        <post-service id="service" posts="{{posts}}"></post-service>
+
+        <flatiron-director route="{{route}}" autoHash/>
+
+        <core-a11y-keys target="{{parentElement}}"
+                        keys="left right"
+                        on-keys-pressed="{{keyHandler}}"></core-a11y-keys>
+
+        <core-scroll-header-panel id="scroll" condenses keepCondensedHeader>
+
+            <core-toolbar class="tall">
+
+                <div id="button-bar" class="bottom" layout horizontal>
+
+                    <core-tooltip label="Stream" position="bottom" class="fancy">
+                        <paper-icon-button id="stream-btn" route="stream" icon="view-stream"
+                                           on-click="{{changeSection}}"></paper-icon-button>
+                    </core-tooltip>
+                    <core-tooltip label="New sarcasm" position="bottom" class="fancy">
+                        <paper-icon-button id="new-btn" route="new" icon="drive-file"
+                                           on-click="{{changeSection}}"></paper-icon-button>
+                    </core-tooltip>
+                    <core-tooltip label="Statistics" position="bottom" class="fancy">
+                        <paper-icon-button id="stats-btn" route="stats" icon="drive-chart"
+                                           on-click="{{changeSection}}"></paper-icon-button>
+                    </core-tooltip>
+                    <core-tooltip label="Who's trending" position="bottom" class="fancy">
+                        <paper-icon-button id="trend-btn" route="trend" icon="trending-up"
+                                           on-click="{{changeSection}}"></paper-icon-button>
+                    </core-tooltip>
+                    <core-tooltip label="Your favorites" position="bottom" class="fancy">
+                        <paper-icon-button id="favorite-btn"route="favorite"  icon="favorite"
+                                           on-click="{{changeSection}}"></paper-icon-button>
+                    </core-tooltip>
+                    <div flex></div>
+                    <core-tooltip label="Search 'em!" position="right" class="fancy">
+                        <paper-icon-button id="search-btn"route="left" icon="search"
+                                           on-click="{{changeSection}}"></paper-icon-button>
+                    </core-tooltip>
+                    <paper-icon-button id="more" icon="more-vert"></paper-icon-button>
+                </div>
+                <paper-shadow z="2"/>
+            </core-toolbar>
+
+            <div class="content">
+
+                <core-animated-pages id="anim" transitions="slide-from-right cross-fade"
+                                     valueattr="id" selected="{{route}}">
+                    <section id="stream">
+                        <sarcasm-stream show="all" posts="{{posts}}" cross-fade slide-from-right></sarcasm-stream>
+                    </section>
+                    <section id="new">
+                        <sarcasm-add cross-fade slide-from-right></sarcasm-add>
+                    </section>
+                    <section id="stats">
+                        <div cross-fade slide-from-right>
+                            <p>Coming Soon</p>
+                        </div>
+                    </section>
+                    <section id="trend">
+                        <div cross-fade slide-from-right>
+                            <p>Coming Soon</p>
+                        </div>
+                    </section>
+                    <section id="favorite">
+                        <sarcasm-stream show="favorites" posts="{{posts}}" cross-fade slide-from-right></sarcasm-stream>
+                    </section>
+                    <section id="search">
+                        <div cross-fade slide-from-right>
+                            <p>Coming Soon</p>
+                        </div>
+                    </section>
+                </core-animated-pages>
+
+            </div>
+
+        </core-scroll-header-panel>
+
+    </template>
+    <script>
+        Polymer({
+            publish: {
+                route: {
+                    value: 'stream',
+                    reflect: true
+                }
+            },
+            ready: function() {
+                this.route = this.route || 'stream';
+            },
+            changeSection: function(event, detail, sender) {
+                this.route = sender.getAttribute('route');
+            },
+            keyHandler: function(event, detail, sender) {
+                var pages = this.$.anim;
+                switch (detail.key) {
+                    case 'left':
+                        pages.selectPrevious();
+                        break;
+                    case 'right':
+                        pages.selectNext();
+                        break;
+                }
+            }
+
+        });
+    </script>
+</polymer-element>

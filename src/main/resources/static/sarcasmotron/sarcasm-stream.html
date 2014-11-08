@@ -1,8 +1,7 @@
-<link rel="import" href="./components/polymer/polymer.html">
-<link rel="import" href="./post-service/post-service.html">
+<link rel="import" href="../components/polymer/polymer.html">
 <link rel="import" href="sarcasm-card.html">
 
-<polymer-element name="sarcasm-stream" attributes="show">
+<polymer-element name="sarcasm-stream" attributes="show posts">
     <template>
         <style>
             :host {
@@ -17,13 +16,12 @@
             }
         </style>
 
-        <post-service id="service" posts="{{posts}}"></post-service>
 
         <div layout vertical center>
 
             <template repeat="{{post in posts}}">
 
-                <sarcasm-card favorite="{{post.favorite}}" on-favorite-tap="{{handleFavorite}}" hidden?="{{show == 'favorites' && !post.favorite}}">
+                <sarcasm-card favorite="{{post.favorite}}" on-favorited="{{handleFavorite}}" hidden?="{{show == 'favorites' && !post.favorite}}">
                     <img src="{{post.avatar}}" width="70" height="70">
                     <h2>{{post.username}}</h2>
                     <p class="context"><b>{{post.timestamp}}</b></p>
@@ -39,6 +37,8 @@
 
     <script>
         Polymer({
+            ready: function() {
+            },
             handleFavorite: function(event, detail, sender) {
                 var post = sender.templateInstance.model.post;
                 this.$.service.setFavorite(post.id, post.favorite);

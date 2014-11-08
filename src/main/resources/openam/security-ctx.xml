@@ -11,6 +11,13 @@
 
     <sec:http entry-point-ref="openam.statelessEntryPoint" use-expressions="true">
         <sec:intercept-url pattern="/users/**" access="permitAll()" />
+        <sec:intercept-url pattern="/" access="permitAll()" />
+        <sec:intercept-url pattern="/api/posts.json" access="permitAll()" />
+        <sec:intercept-url pattern="/images/**" access="permitAll()" />
+        <sec:intercept-url pattern="/js/**" access="permitAll()" />
+        <sec:intercept-url pattern="/components/**" access="permitAll()" />
+        <sec:intercept-url pattern="/post-service/**" access="permitAll()" />
+        <sec:intercept-url pattern="/sarcasmotron/**" access="permitAll()" />
         <sec:intercept-url pattern="/**" access="isFullyAuthenticated()" />
         <sec:custom-filter ref="openam.statelessAuthenticationFilter" position="BASIC_AUTH_FILTER" />
     </sec:http>
