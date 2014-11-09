@@ -15,7 +15,7 @@
 <link rel="import" href="sarcasm-stream.html">
 <link rel="import" href="sarcasm-add.html">
 
-<polymer-element name="sarcasmotron-app">
+<polymer-element name="sarcasmotron-app" on-sarcasm-added="{{handleAddedSarcasm}}">
     <template>
         <style>
             core-scroll-header-panel {

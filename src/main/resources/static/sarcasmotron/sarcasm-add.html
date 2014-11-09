@@ -40,9 +40,10 @@
 
         </style>
 
-        <paper-toast id="addedToast" text="Sarcasm added!"></paper-toast>
-
         <paper-shadow z="1">
+
+            <paper-toast id="addedToast" text="Sarcasm added!"></paper-toast>
+
             <div id="new-sarcasm">
                 <div class="card-header" layout horizontal center>
                     <h3>Create a new Sarcasm</h3>
@@ -62,30 +63,18 @@
     <script>
         Polymer({
             handleAdd: function(event, detail, sender) {
+                this.fire('core-signal',
+                        {name: "sarcasm-added", data:
+                            {context: this.context,
+                                quote: this.quote,
+                                timestamp: moment().format("YYYY-MM-DDTHH:mm:ss.SSSZ"),
+                                user: this.user,
+                                avatar: '../images/avatar-01.svg'
+                            }
+                        }
+                );
                 var toast = this.$.addedToast;
-                var SarcasmModel = Backbone.Model.extend({
-                    urlRoot: '/sarcasm'
-                });
-                var SarcasmCollection = Backbone.Collection.extend({
-                    model: SarcasmModel,
-                    url: '/sarcasm'
-                });
-                var sarcasms = new SarcasmCollection();
-                sarcasms.create({context: this.context,
-                    quote: this.quote,
-                    timestamp: moment().format("YYYY-MM-DDTHH:mm:ss.SSSZ"),
-                    user: this.user},
-                {
-                    wait : true,
-                    success : function(resp){
-                        toast.show();
-                    },
-                    error : function(err) {
-                        console.log("Fail saving sarcasm: " + err);
-                        toast.text = 'Error while saving sarcasm!';
-                        toast.show();
-                    }
-                });
+                toast.show();
             }
         });
     </script>

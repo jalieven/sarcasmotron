@@ -1,4 +1,5 @@
 <link rel="import" href="../components/polymer/polymer.html">
+<link rel="import" href="../components/core-signals/core-signals.html">
 <link rel="import" href="../components/paper-toast/paper-toast.html">
 <link rel="import" href="sarcasm-card.html">
 
@@ -18,6 +19,9 @@
         </style>
 
         <div layout vertical center>
+
+            <core-signals on-core-signal-sarcasm-added="{{handleSarcasmAdded}}"></core-signals>
+            <core-signals on-core-signal-sarcasm-favorited="{{handleSarcasmFavorited}}"></core-signals>
 
             <paper-toast id="favoriteToast" text="Favorite updated!"></paper-toast>
             <paper-toast id="upvoteToast" text="Upvote cast successfully"></paper-toast>
@@ -59,9 +63,6 @@
                 };
 
                 var SarcasmModel = Backbone.Model.extend({
-                    initialize : function() {
-                        console.log("Init Backbone Sarcasm");
-                    },
                     urlRoot: '/sarcasm',
                     favorite: function(opts) {
                         var model = this, url = model.url() + '/favorite',
@@ -84,10 +85,19 @@
                 });
                 var SarcasmCollection = Backbone.Collection.extend({
                     model: SarcasmModel,
-                    url: '/sarcasm'
+                    url: '/sarcasm',
+                    comparator: function (a, b) {
+                        var one = moment(a.get("timestamp"), "YYYY-MM-DD'T'HH:mm:ss.SSSSZ");
+                        var two = moment(b.get("timestamp"), "YYYY-MM-DD'T'HH:mm:ss.SSSSZ");
+                        if(one.isAfter(two)) {
+                            return -1;
+                        } else {
+                            return 1;
+                        }
+                    }
                 });
-                var sarcasms = new SarcasmCollection();
-                sarcasms.fetch({
+                this.sarcasmsModel = new SarcasmCollection();
+                this.sarcasmsModel.fetch({
                     success: function (collection, response, options) {
                         that.collection = collection;
                         that.sarcasms = collection.toJSON();
@@ -109,6 +119,7 @@
                 favoriteModel.favorite({
                     success: function (model, response, options) {
                         toast.show();
+                        that.fire('core-signal', {name: "sarcasm-favorited", data: model});
                     },
                     error: function (model, response, options) {
                         console.log("Error favoriting")
@@ -116,7 +127,6 @@
                 });
             },
             handleVoteUp: function(event, detail, sender) {
-                var that = this;
                 var toast = this.$.upvoteToast;
                 console.log("VOTE UP: " + sender.templateInstance.model.sarcasm);
                 var sarcasm = sender.templateInstance.model.sarcasm;
@@ -136,7 +146,6 @@
                 });
             },
             handleVoteDown: function(event, detail, sender) {
-                var that = this;
                 var toast = this.$.downvoteToast;
                 console.log("VOTE DOWN: " + sender.templateInstance.model.sarcasm);
                 var sarcasm = sender.templateInstance.model.sarcasm;
@@ -160,6 +169,41 @@
             },
             toHumanReadable: function(timestamp) {
                 return moment(timestamp, "YYYY-MM-DD'T'HH:mm:ss.SSSZ").fromNow()
+            },
+            handleSarcasmAdded: function(event, detail, sender) {
+                var that = this;
+                this.sarcasmsModel.create(detail,
+                        {
+                            wait : true,
+                            success : function(model, response, options){
+                                console.log("Sarcasm Added!!!!");
+                                that.collection.sort();
+                                that.sarcasms = that.collection.toJSON();
+                                for (var i = 0; i < that.sarcasms.length; i++) {
+                                    var sarcasm = that.sarcasms[i];
+                                    sarcasm.avatar = '../images/avatar-01.svg';
+                                }
+                            },
+                            error : function(err) {
+                                console.log("Fail saving sarcasm: " + err);
+                            }
+                        });
+            },
+            handleSarcasmFavorited: function(event, detail, sender) {
+                var that = this;
+                this.sarcasmsModel.fetch({
+                    success: function (collection, response, options) {
+                        that.collection = collection;
+                        that.sarcasms = collection.toJSON();
+                        for (var i = 0; i < that.sarcasms.length; i++) {
+                            var sarcasm = that.sarcasms[i];
+                            sarcasm.avatar = '../images/avatar-01.svg';
+                        }
+                    },
+                    error: function(collection, response, options) {
+                        console.log("Error while fetching sarcasms: " + response);
+                    },
+                    dataType: "json"});
             }
         });
     </script>
