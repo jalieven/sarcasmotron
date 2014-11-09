@@ -13,7 +13,6 @@ import com.rizzo.sarcasmotron.domain.mongodb.Sarcasm;
 import com.rizzo.sarcasmotron.domain.mongodb.User;
 import com.rizzo.sarcasmotron.domain.web.StatsRequest;
 import com.rizzo.sarcasmotron.domain.web.TrendRequest;
-import com.rizzo.sarcasmotron.domain.web.VoteRequest;
 import com.rizzo.sarcasmotron.elasticsearch.ElasticsearchSarcasmRepository;
 import com.rizzo.sarcasmotron.mongodb.MongoDBSarcasmRepository;
 import com.rizzo.sarcasmotron.mongodb.MongoDBStatsRepository;
@@ -47,8 +46,6 @@ import static com.jayway.restassured.config.RestAssuredConfig.newConfig;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 
-// TODO make sure when security is in place to try to (up/down)vote as "joost" and make it all work
-
 @RunWith(SpringJUnit4ClassRunner.class)
 @SpringApplicationConfiguration(classes = Sarcasmotron.class)
 @WebAppConfiguration
@@ -56,6 +53,7 @@ import static org.junit.Assert.assertTrue;
 public class RestApiTest {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(RestApiTest.class);
+    private static final String SSO_TOKEN = "AQIC5wM2LY4SfczIs9hUC15EiPmsy5GMlN_ubqje5bFjZ5g.*AAJTSQACMDIAAlNLABIxNTMzNjYzMTk0NTMyNTA0NjQAAlMxAAIwMQ..*";
 
     @Value("${local.server.port}")
     private int port = 0;
@@ -109,39 +107,22 @@ public class RestApiTest {
                 .getBody().contains("<title>Sarcasmotron"));
     }
 
-    private Sarcasm createSarcasm(String user, String creator, DateTime timestamp, boolean withComment) {
-        final Sarcasm sarcasm = new Sarcasm()
-                .setQuote("I'm trying to imagine you with a personality.")
-                .setContext("In a fight!")
-                .stamp(timestamp)
-                .setCreator(creator)
-                .setUser(user);
-        if (withComment) {
-            final Comment comment = new Comment()
-                    .setComment("Very funny! Cuz it's true!")
-                    .stamp(timestamp)
-                    .setUser(creator);
-            sarcasm.addComment(comment);
-        }
-        return sarcasm;
-    }
-
     @Test
     public void testPostSarcasms() throws Exception {
         LOGGER.debug("TEST: testPostSarcasms");
 
-        final Sarcasm sarcasm0 = createSarcasm("joost", "jalie", DateTime.now(), true);
-        final Sarcasm sarcasm1 = createSarcasm("gert", "joost", DateTime.now(), false);
+        final Sarcasm sarcasm0 = createSarcasm("joost", "jalie", DateTime.now());
+        final Sarcasm sarcasm1 = createSarcasm("gert", "joost", DateTime.now());
 
-        given().log().all()
+        given().log().all().header("openamssoid", SSO_TOKEN)
                 .contentType(ContentType.JSON).body(sarcasm0)
-                .when().post("/sarcasms")
+                .when().post("/sarcasm")
                 .then().log().all()
                 .statusCode(HttpStatus.CREATED.value());
 
-        given().log().all()
+        given().log().all().header("openamssoid", SSO_TOKEN)
                 .contentType(ContentType.JSON).body(sarcasm1)
-                .when().post("/sarcasms")
+                .when().post("/sarcasm")
                 .then().log().all()
                 .statusCode(HttpStatus.CREATED.value());
 
@@ -152,21 +133,19 @@ public class RestApiTest {
     public void testGetSarcasms() throws Exception {
         LOGGER.debug("TEST: testGetSarcasms");
 
-        final Sarcasm sarcasm = createSarcasm("jalie", "gert", DateTime.now(), true);
+        final Sarcasm sarcasm = createSarcasm("jalie", "gert", DateTime.now());
 
         this.mongoDBSarcasmRepository.save(sarcasm);
         final String sarcasmId = sarcasm.getId();
         LOGGER.debug("Generated Sarcasm id: " + sarcasmId);
 
-        given().log().all()
-                .when().get("/sarcasms/{id}", sarcasmId)
+        given().log().all().header("openamssoid", SSO_TOKEN)
+                .when().get("/sarcasm/{id}", sarcasmId)
                 .then().log().all()
                 .statusCode(HttpStatus.OK.value())
                 .body("user", Matchers.is("jalie"))
                 .body("creator", Matchers.is("gert"))
-                .body("quote", Matchers.is("I'm trying to imagine you with a personality."))
-                .body("comments.user", Matchers.hasItem("gert"))
-                .body("comments.comment", Matchers.hasItem("Very funny! Cuz it's true!"));
+                .body("quote", Matchers.is("I'm trying to imagine you with a personality."));
 
     }
 
@@ -174,57 +153,65 @@ public class RestApiTest {
     public void testUpdateSarcasms() throws Exception {
         LOGGER.debug("TEST: testUpdateSarcasms");
 
-        final Sarcasm sarcasm = createSarcasm("jalie", "gert", DateTime.now(), true);
+        final Sarcasm sarcasm = createSarcasm("jalie", "gert", DateTime.now());
+        final Sarcasm ownSarcasm = createSarcasm("gert", "jalie", DateTime.now());
 
         this.mongoDBSarcasmRepository.save(sarcasm);
-        final String sarcasmId = sarcasm.getId();
-        LOGGER.debug("Generated Sarcasm id: " + sarcasmId);
+        this.mongoDBSarcasmRepository.save(ownSarcasm);
 
-        final Sarcasm newSarcasm = createSarcasm("joost", "gert", DateTime.now(), false)
+        final String sarcasmId = sarcasm.getId();
+        final String ownSarcasmId = ownSarcasm.getId();
+
+        final Sarcasm newSarcasm = createSarcasm("joost", "gert", DateTime.now())
                 .setQuote("This isn't an office. It's Hell with fluorescent lighting.")
                 .setContext("On a good office day!");
 
-        given().log().all()
-                .contentType(ContentType.JSON).body(new VoteRequest().setSarcasmId(sarcasmId))
-                .when().post("/downvote")
+        given().log().all().header("openamssoid", SSO_TOKEN)
+                .contentType(ContentType.JSON)
+                .when().post("/sarcasm/" + sarcasmId + "/downvote")
                 .then().log().all()
                 .statusCode(HttpStatus.GONE.value())
                 .body("message", Matchers.is("You cannot vote for your own sarcasm!"));
 
-        given().log().all()
+        given().log().all().header("openamssoid", SSO_TOKEN)
                 .contentType(ContentType.JSON).body(newSarcasm)
-                .when().put("/sarcasms/{id}", sarcasmId)
+                .when().put("/sarcasm/{id}", sarcasmId)
+                .then().log().all()
+                .statusCode(HttpStatus.UNAUTHORIZED.value());
+
+        given().log().all().header("openamssoid", SSO_TOKEN)
+                .contentType(ContentType.JSON).body(newSarcasm)
+                .when().put("/sarcasm/{id}", ownSarcasmId)
                 .then().log().all()
                 .statusCode(HttpStatus.NO_CONTENT.value());
 
-        given().log().all()
-                .contentType(ContentType.JSON).body(new VoteRequest().setSarcasmId(sarcasmId))
-                .when().post("/downvote")
+        given().log().all().header("openamssoid", SSO_TOKEN)
+                .contentType(ContentType.JSON)
+                .when().post("/sarcasm/" + ownSarcasmId + "/downvote")
                 .then().log().all()
                 .statusCode(HttpStatus.CREATED.value())
                 .body("cast", Matchers.is(true));
 
-        given().log().all()
-                .when().get("/sarcasms/{id}", sarcasmId)
+        given().log().all().header("openamssoid", SSO_TOKEN)
+                .when().get("/sarcasm/{id}", ownSarcasmId)
                 .then().log().all()
                 .statusCode(HttpStatus.OK.value())
-                .body("user", Matchers.is("joost"))
+                .body("user", Matchers.is("gert"))
                 .body("voteTotal", Matchers.is(-1))
-                .body("quote", Matchers.is("This isn't an office. It's Hell with fluorescent lighting."))
-                .body("comments", Matchers.empty());
+                .body("quote", Matchers.is("This isn't an office. It's Hell with fluorescent lighting."));
     }
 
     @Test
     public void testDeleteSarcasms() throws Exception {
         LOGGER.debug("TEST: testDeleteSarcasms");
-        final Sarcasm sarcasm = createSarcasm("jalie", "gert", DateTime.now(), true);
+        final Sarcasm sarcasm = createSarcasm("jalie", "gert", DateTime.now());
 
         this.mongoDBSarcasmRepository.save(sarcasm);
         final String sarcasmId = sarcasm.getId();
         LOGGER.debug("Generated Sarcasm id: " + sarcasmId);
 
-        given().log().all()
-                .when().delete("/sarcasms/{id}", sarcasmId)
+        given().log().all().header("openamssoid", SSO_TOKEN)
+                .when().delete("/sarcasm/{id}", sarcasmId)
                 .then().log().all()
                 .statusCode(HttpStatus.NO_CONTENT.value());
 
@@ -241,14 +228,14 @@ public class RestApiTest {
         final DateTime yesterdayMidnight = now.minus(org.joda.time.Days.days(1)).withTimeAtStartOfDay();
 
         // first create some sarcastic quotes
-        final Sarcasm sarcasmFour = createSarcasm("jalie", "gert", now.minus(org.joda.time.Days.days(6)), false);
+        final Sarcasm sarcasmFour = createSarcasm("jalie", "gert", now.minus(org.joda.time.Days.days(6)));
         sarcasmFour.upVote("kenzo");
         sarcasmFour.upVote("joost");
         sarcasmFour.upVote("gert");
         mongoDBSarcasmRepository.save(sarcasmFour);
         LOGGER.debug("Generated Sarcasm id: " + sarcasmFour.getId());
 
-        final Sarcasm sarcasmThree = createSarcasm("jalie", "joost", now.minus(org.joda.time.Days.days(5)), false);
+        final Sarcasm sarcasmThree = createSarcasm("jalie", "joost", now.minus(org.joda.time.Days.days(5)));
         sarcasmThree.downVote("joost");
         sarcasmThree.upVote("wijlen");
         sarcasmThree.upVote("ikke");
@@ -256,7 +243,7 @@ public class RestApiTest {
         mongoDBSarcasmRepository.save(sarcasmThree);
         LOGGER.debug("Generated Sarcasm id: " + sarcasmThree.getId());
 
-        final Sarcasm sarcasmTwo = createSarcasm("jalie", "joost", now.minus(org.joda.time.Days.days(4)), false);
+        final Sarcasm sarcasmTwo = createSarcasm("jalie", "joost", now.minus(org.joda.time.Days.days(4)));
         sarcasmTwo.upVote("ikke");
         sarcasmTwo.downVote("gij");
         sarcasmTwo.upVote("wij");
@@ -265,14 +252,14 @@ public class RestApiTest {
         mongoDBSarcasmRepository.save(sarcasmTwo);
         LOGGER.debug("Generated Sarcasm id: " + sarcasmTwo.getId());
 
-        final Sarcasm sarcasmOne = createSarcasm("jalie", "gert", now.minus(org.joda.time.Days.days(1)), false);
+        final Sarcasm sarcasmOne = createSarcasm("jalie", "gert", now.minus(org.joda.time.Days.days(1)));
         sarcasmOne.upVote("ikke");
         sarcasmOne.downVote("gij");
         sarcasmOne.upVote("zij");
         mongoDBSarcasmRepository.save(sarcasmOne);
         LOGGER.debug("Generated Sarcasm id: " + sarcasmOne.getId());
 
-        final Sarcasm sarcasmZero = createSarcasm("jalie", "tom", now, false);
+        final Sarcasm sarcasmZero = createSarcasm("jalie", "tom", now);
         sarcasmZero.upVote("ikke");
         sarcasmZero.downVote("gij");
         sarcasmZero.upVote("zij");
@@ -294,7 +281,9 @@ public class RestApiTest {
         final String yesterdayIntervalKey = Sarcasm.TIMESTAMP_FORMAT.format(yesterdayMidnight.toDate());
         final String timezoneNeutralIntervalKey = intervalKey.replace(intervalKey.substring(intervalKey.length() - 4, intervalKey.length()), "0000");
         final String timezoneNeutralYesterdayIntervalKey = yesterdayIntervalKey.replace(yesterdayIntervalKey.substring(yesterdayIntervalKey.length() - 4, yesterdayIntervalKey.length()), "0000");
-        given().log().all().config(newConfig().jsonConfig(jsonConfig().numberReturnType(JsonPathConfig.NumberReturnType.BIG_DECIMAL)))
+
+        given().log().all().header("openamssoid", SSO_TOKEN)
+                .config(newConfig().jsonConfig(jsonConfig().numberReturnType(JsonPathConfig.NumberReturnType.BIG_DECIMAL)))
                 .contentType(ContentType.JSON).body(trendRequest)
                 .when().post("/trend")
                 .then().log().all()
@@ -307,21 +296,21 @@ public class RestApiTest {
     @Test
     public void testVoteCasting() {
         LOGGER.debug("TEST: testVoteCasting");
-        final Sarcasm sarcasm = createSarcasm("joost", "tom", DateTime.now(), false);
+        final Sarcasm sarcasm = createSarcasm("joost", "tom", DateTime.now());
         sarcasm.upVote("gert");
         mongoDBSarcasmRepository.save(sarcasm);
         LOGGER.debug("Generated Sarcasm id: " + sarcasm.getId());
 
-        given().log().all()
-                .contentType(ContentType.JSON).body(new VoteRequest().setSarcasmId(sarcasm.getId()))
-                .when().post("/upvote")
+        given().log().all().header("openamssoid", SSO_TOKEN)
+                .contentType(ContentType.JSON)
+                .when().post("/sarcasm/" + sarcasm.getId() + "/upvote")
                 .then().log().all()
                 .statusCode(HttpStatus.CREATED.value())
                 .body("cast", Matchers.is(true));
 
-        given().log().all()
-                .contentType(ContentType.JSON).body(new VoteRequest().setSarcasmId(sarcasm.getId()))
-                .when().post("/downvote")
+        given().log().all().header("openamssoid", SSO_TOKEN)
+                .contentType(ContentType.JSON)
+                .when().post("/sarcasm/" + sarcasm.getId() + "/downvote")
                 .then().log().all()
                 .statusCode(HttpStatus.GONE.value())
                 .body("cast", Matchers.is(false))
@@ -333,14 +322,14 @@ public class RestApiTest {
     public void testTotalVotes() {
         final DateTime now = new DateTime();
 
-        final Sarcasm sarcasmFour = createSarcasm("jalie", "gert", now.minus(org.joda.time.Days.days(6)), false);
+        final Sarcasm sarcasmFour = createSarcasm("jalie", "gert", now.minus(org.joda.time.Days.days(6)));
         sarcasmFour.upVote("kenzo");
         sarcasmFour.upVote("joost");
         sarcasmFour.upVote("gert");
         mongoDBSarcasmRepository.save(sarcasmFour);
         LOGGER.debug("Generated Sarcasm id: " + sarcasmFour.getId());
 
-        final Sarcasm sarcasmThree = createSarcasm("jalie", "tom", now.minus(org.joda.time.Days.days(5)), false);
+        final Sarcasm sarcasmThree = createSarcasm("jalie", "tom", now.minus(org.joda.time.Days.days(5)));
         sarcasmThree.downVote("joost");
         sarcasmThree.upVote("wijlen");
         sarcasmThree.upVote("ikke");
@@ -348,7 +337,7 @@ public class RestApiTest {
         mongoDBSarcasmRepository.save(sarcasmThree);
         LOGGER.debug("Generated Sarcasm id: " + sarcasmThree.getId());
 
-        final Sarcasm sarcasmTwo = createSarcasm("jalie", "tom", now.minus(org.joda.time.Days.days(4)), false);
+        final Sarcasm sarcasmTwo = createSarcasm("jalie", "tom", now.minus(org.joda.time.Days.days(4)));
         sarcasmTwo.upVote("ikke");
         sarcasmTwo.downVote("gij");
         sarcasmTwo.upVote("wij");
@@ -357,14 +346,14 @@ public class RestApiTest {
         mongoDBSarcasmRepository.save(sarcasmTwo);
         LOGGER.debug("Generated Sarcasm id: " + sarcasmTwo.getId());
 
-        final Sarcasm sarcasmOne = createSarcasm("jalie", "joost", now.minus(org.joda.time.Days.days(1)), false);
+        final Sarcasm sarcasmOne = createSarcasm("jalie", "joost", now.minus(org.joda.time.Days.days(1)));
         sarcasmOne.upVote("ikke");
         sarcasmOne.downVote("gij");
         sarcasmOne.upVote("zij");
         mongoDBSarcasmRepository.save(sarcasmOne);
         LOGGER.debug("Generated Sarcasm id: " + sarcasmOne.getId());
 
-        final Sarcasm sarcasmZero = createSarcasm("jalie", "gert", now, false);
+        final Sarcasm sarcasmZero = createSarcasm("jalie", "gert", now);
         sarcasmZero.upVote("ikke");
         sarcasmZero.downVote("gij");
         sarcasmZero.upVote("zij");
@@ -384,7 +373,7 @@ public class RestApiTest {
     public void testWinnerCalculation() throws InterruptedException {
         final DateTime now = new DateTime();
 
-        final Sarcasm sarcasmThree = createSarcasm("jalie", "gert", now.minus(org.joda.time.Days.days(5)), false);
+        final Sarcasm sarcasmThree = createSarcasm("jalie", "gert", now.minus(org.joda.time.Days.days(5)));
         sarcasmThree.downVote("joost");
         sarcasmThree.upVote("wijlen");
         sarcasmThree.upVote("ikke");
@@ -392,7 +381,7 @@ public class RestApiTest {
         mongoDBSarcasmRepository.save(sarcasmThree);
         LOGGER.debug("Generated Sarcasm id: " + sarcasmThree.getId());
 
-        final Sarcasm sarcasmTwo = createSarcasm("gert", "jalie", now.minus(org.joda.time.Days.days(4)), false);
+        final Sarcasm sarcasmTwo = createSarcasm("gert", "jalie", now.minus(org.joda.time.Days.days(4)));
         sarcasmTwo.upVote("ikke");
         sarcasmTwo.downVote("gij");
         sarcasmTwo.upVote("wij");
@@ -404,14 +393,14 @@ public class RestApiTest {
         mongoDBSarcasmRepository.save(sarcasmTwo);
         LOGGER.debug("Generated Sarcasm id: " + sarcasmTwo.getId());
 
-        final Sarcasm sarcasmOne = createSarcasm("joost", "gert", now.minus(org.joda.time.Days.days(1)), false);
+        final Sarcasm sarcasmOne = createSarcasm("joost", "gert", now.minus(org.joda.time.Days.days(1)));
         sarcasmOne.upVote("ikke");
         sarcasmOne.downVote("gij");
         sarcasmOne.upVote("zij");
         mongoDBSarcasmRepository.save(sarcasmOne);
         LOGGER.debug("Generated Sarcasm id: " + sarcasmOne.getId());
 
-        final Sarcasm sarcasmZero = createSarcasm("jalie", "joost", now, false);
+        final Sarcasm sarcasmZero = createSarcasm("jalie", "joost", now);
         sarcasmZero.upVote("ikke");
         sarcasmZero.downVote("gij");
         sarcasmZero.upVote("zij");
@@ -420,7 +409,8 @@ public class RestApiTest {
         sarcasmZero.upVote("iemand");
         mongoDBSarcasmRepository.save(sarcasmZero);
 
-        given().log().all().config(newConfig().jsonConfig(jsonConfig().numberReturnType(JsonPathConfig.NumberReturnType.FLOAT_AND_DOUBLE)))
+        given().log().all().header("openamssoid", SSO_TOKEN)
+                .config(newConfig().jsonConfig(jsonConfig().numberReturnType(JsonPathConfig.NumberReturnType.FLOAT_AND_DOUBLE)))
                 .contentType(ContentType.JSON).body(new StatsRequest().setUser("jalie").setPeriodExpression("1w"))
                 .when().post("/votestats")
                 .then().log().all()
@@ -430,7 +420,8 @@ public class RestApiTest {
                 .body("voteStats.jalie.max", Matchers.is(4.0F))
                 .body("voteStats.jalie.min", Matchers.is(2.0F));
 
-        given().log().all().config(newConfig().jsonConfig(jsonConfig().numberReturnType(JsonPathConfig.NumberReturnType.FLOAT_AND_DOUBLE)))
+        given().log().all().header("openamssoid", SSO_TOKEN)
+                .config(newConfig().jsonConfig(jsonConfig().numberReturnType(JsonPathConfig.NumberReturnType.FLOAT_AND_DOUBLE)))
                 .contentType(ContentType.JSON).body(new StatsRequest().setUser("*").setPeriodExpression("3d"))
                 .when().post("/votestats")
                 .then().log().all()
@@ -451,6 +442,110 @@ public class RestApiTest {
                 .body("voteStats.gert.min", Matchers.is("Infinity"));
 
 
+    }
+
+    @Test
+    public void testPostAndGetComment() throws Exception {
+        LOGGER.debug("TEST: testPostComment");
+
+        final Sarcasm sarcasmOne = createSarcasm("joost", "gert", DateTime.now().minus(org.joda.time.Days.days(1)));
+        mongoDBSarcasmRepository.save(sarcasmOne);
+        LOGGER.debug("Generated Sarcasm id: " + sarcasmOne.getId());
+
+        final Sarcasm sarcasmZero = createSarcasm("jalie", "joost", DateTime.now());
+        mongoDBSarcasmRepository.save(sarcasmZero);
+
+        given().log().all().header("openamssoid", SSO_TOKEN)
+                .contentType(ContentType.JSON).body(new Comment().setComment("Some comment").stamp())
+                .when().post("/sarcasm/" + sarcasmOne.getId() + "/comment")
+                .then().log().all()
+                .statusCode(HttpStatus.CREATED.value());
+
+        given().log().all().header("openamssoid", SSO_TOKEN)
+                .contentType(ContentType.JSON)
+                .when().get("/sarcasm/" + sarcasmOne.getId() + "/comment")
+                .then().log().all()
+                .statusCode(HttpStatus.OK.value())
+                .body("comment", Matchers.contains("Some comment"))
+                .body("user", Matchers.contains("jalie"));
+
+        given().log().all().header("openamssoid", SSO_TOKEN)
+                .contentType(ContentType.JSON)
+                .when().get("/sarcasm/" + sarcasmZero.getId() + "/comment")
+                .then().log().all()
+                .statusCode(HttpStatus.OK.value())
+                .body("comment", Matchers.empty())
+                .body("user", Matchers.empty());
+    }
+
+    @Test
+    public void testFavorites() throws Exception {
+        LOGGER.debug("TEST: testFavorites");
+
+        final Sarcasm sarcasmOne = createSarcasm("joost", "gert", DateTime.now().minus(org.joda.time.Days.days(1)));
+        mongoDBSarcasmRepository.save(sarcasmOne);
+
+        final Sarcasm sarcasmZero = createSarcasm("jalie", "joost", DateTime.now());
+        mongoDBSarcasmRepository.save(sarcasmZero);
+
+        given().log().all().header("openamssoid", SSO_TOKEN)
+                .contentType(ContentType.JSON)
+                .when().post("/sarcasm/" + sarcasmOne.getId() + "/favorite")
+                .then().log().all()
+                .statusCode(HttpStatus.CREATED.value());
+
+        given().log().all().header("openamssoid", SSO_TOKEN)
+                .contentType(ContentType.JSON)
+                .when().get("/sarcasm/favorite")
+                .then().log().all()
+                .statusCode(HttpStatus.OK.value())
+                .body("creator", Matchers.contains(sarcasmOne.getCreator()))
+                .body("user", Matchers.contains(sarcasmOne.getUser()))
+                .body("creator", Matchers.not(Matchers.contains(sarcasmZero.getCreator())))
+                .body("user", Matchers.not(Matchers.contains(sarcasmZero.getUser())));
+    }
+
+    @Test
+    public void testToVote() throws Exception {
+        LOGGER.debug("TEST: testToVote");
+
+        final Sarcasm sarcasmOne = createSarcasm("joost", "gert", DateTime.now().minus(org.joda.time.Days.days(1)));
+        mongoDBSarcasmRepository.save(sarcasmOne);
+
+        final Sarcasm sarcasmZero = createSarcasm("jalie", "joost", DateTime.now());
+        mongoDBSarcasmRepository.save(sarcasmZero);
+
+        given().log().all().header("openamssoid", SSO_TOKEN)
+                .contentType(ContentType.JSON)
+                .when().post("/sarcasm/" + sarcasmOne.getId() + "/favorite")
+                .then().log().all()
+                .statusCode(HttpStatus.CREATED.value());
+
+        given().log().all().header("openamssoid", SSO_TOKEN)
+                .contentType(ContentType.JSON)
+                .when().post("/sarcasm/" + sarcasmOne.getId() + "/upvote")
+                .then().log().all()
+                .statusCode(HttpStatus.CREATED.value())
+                .body("cast", Matchers.is(true));
+
+        given().log().all().header("openamssoid", SSO_TOKEN)
+                .contentType(ContentType.JSON)
+                .when().get("/sarcasm/tovote")
+                .then().log().all()
+                .statusCode(HttpStatus.OK.value())
+                .body("creator", Matchers.contains(sarcasmZero.getCreator()))
+                .body("user", Matchers.contains(sarcasmZero.getUser()))
+                .body("creator", Matchers.not(Matchers.contains(sarcasmOne.getCreator())))
+                .body("user", Matchers.not(Matchers.contains(sarcasmOne.getUser())));
+    }
+
+    private Sarcasm createSarcasm(String user, String creator, DateTime timestamp) {
+        return new Sarcasm()
+                .setQuote("I'm trying to imagine you with a personality.")
+                .setContext("In a fight!")
+                .stamp(timestamp)
+                .setCreator(creator)
+                .setUser(user);
     }
 
 }

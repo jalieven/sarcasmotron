@@ -3,6 +3,7 @@ package com.rizzo.sarcasmotron.domain.mongodb;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
+import com.rizzo.sarcasmotron.boot.Sarcasmotron;
 import org.apache.commons.lang.builder.ToStringBuilder;
 import org.joda.time.DateTime;
 import org.springframework.data.annotation.Id;
@@ -33,10 +34,17 @@ public class Sarcasm implements Serializable {
 
     private String context;
 
+    private boolean edited;
+
     @JsonIgnore
     @Field(type = FieldType.Nested)
     private Map<String, Integer> votes;
 
+    @JsonIgnore
+    @Field(type = FieldType.Nested)
+    private List<String> favorites;
+
+    @JsonIgnore
     @Field(type = FieldType.Nested)
     private List<Comment> comments;
 
@@ -142,6 +150,15 @@ public class Sarcasm implements Serializable {
         return this;
     }
 
+    public boolean isEdited() {
+        return edited;
+    }
+
+    public Sarcasm setEdited(boolean edited) {
+        this.edited = edited;
+        return this;
+    }
+
     public List<Comment> getComments() {
         if(this.comments == null) {
             this.comments = Lists.newArrayList();
@@ -159,6 +176,23 @@ public class Sarcasm implements Serializable {
         return this;
     }
 
+    public List<String> getFavorites() {
+        if(this.favorites == null) {
+            this.favorites = Lists.newArrayList();
+        }
+        return favorites;
+    }
+
+    public Sarcasm setFavorites(List<String> favorites) {
+        this.favorites = favorites;
+        return this;
+    }
+
+    public Sarcasm addFavorite(String user) {
+        getFavorites().add(user);
+        return this;
+    }
+
     @Override
     public String toString() {
         return new ToStringBuilder(this)
@@ -168,7 +202,9 @@ public class Sarcasm implements Serializable {
                 .append("creator", creator)
                 .append("quote", quote)
                 .append("context", context)
+                .append("edited", edited)
                 .append("votes", votes)
+                .append("favorites", favorites)
                 .append("comments", comments)
                 .toString();
     }

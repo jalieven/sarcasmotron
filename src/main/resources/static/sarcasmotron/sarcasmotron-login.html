@@ -36,6 +36,10 @@
             .login-form {
                 padding: 20px;
             }
+            .error-messages {
+                color: red;
+                padding: 20px;
+            }
             paper-fab.green {
                 background: #259b24;
             }
@@ -67,7 +71,7 @@
 
         <div class="content">
             <template id="error" bind>
-                <div>{{loginError}}</div>
+                <div class="error-messages" layout vertical center><b>{{loginError}}</b></div>
             </template>
             <div class="login-form" layout vertical center>
                 <paper-input value="{{username}}" label="Username" floatingLabel></paper-input>
@@ -95,6 +99,9 @@
             reset: function(event, detail, sender) {
                 this.username = '';
                 this.password = '';
+                this.$.error.model = {
+                    loginError: ''
+                };
             },
             submit: function(event, detail, sender) {
                 login(this.username, this.password, '/');

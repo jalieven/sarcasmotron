@@ -115,7 +115,4 @@ public class VoteCalculator {
         return new VoteStats().setCount(esStats.getCount()).setMax(esStats.getMax()).setMin(esStats.getMin()).setSum(esStats.getSum());
     }
 
-    public List<Sarcasm> findToVote(String nickname) {
-        return mongoTemplate.find(new BasicQuery("{votes."+ nickname + ": null, user: {$ne: '" + nickname + "'}}"), Sarcasm.class);
-    }
 }
