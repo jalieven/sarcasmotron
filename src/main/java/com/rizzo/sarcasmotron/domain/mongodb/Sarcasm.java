@@ -3,10 +3,11 @@ package com.rizzo.sarcasmotron.domain.mongodb;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
-import com.rizzo.sarcasmotron.boot.Sarcasmotron;
+import com.google.common.collect.Sets;
 import org.apache.commons.lang.builder.ToStringBuilder;
 import org.joda.time.DateTime;
 import org.springframework.data.annotation.Id;
+import org.springframework.data.annotation.Transient;
 import org.springframework.data.elasticsearch.annotations.Field;
 import org.springframework.data.elasticsearch.annotations.FieldType;
 
@@ -15,6 +16,7 @@ import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 public class Sarcasm implements Serializable {
 
@@ -34,6 +36,16 @@ public class Sarcasm implements Serializable {
 
     private String context;
 
+    @Transient
+    private boolean favorite;
+
+    @Transient
+    private boolean votedUp;
+
+    @Transient
+    private boolean votedDown;
+
+    @JsonIgnore
     private boolean edited;
 
     @JsonIgnore
@@ -42,7 +54,7 @@ public class Sarcasm implements Serializable {
 
     @JsonIgnore
     @Field(type = FieldType.Nested)
-    private List<String> favorites;
+    private Set<String> favorites;
 
     @JsonIgnore
     @Field(type = FieldType.Nested)
@@ -176,21 +188,63 @@ public class Sarcasm implements Serializable {
         return this;
     }
 
-    public List<String> getFavorites() {
+    public Set<String> getFavorites() {
         if(this.favorites == null) {
-            this.favorites = Lists.newArrayList();
+            this.favorites = Sets.newHashSet();
         }
         return favorites;
     }
 
-    public Sarcasm setFavorites(List<String> favorites) {
+    public Sarcasm setFavorites(Set<String> favorites) {
         this.favorites = favorites;
         return this;
     }
 
-    public Sarcasm addFavorite(String user) {
-        getFavorites().add(user);
+    public boolean getFavorite() {
+        return favorite;
+    }
+
+    public void setFavorite(boolean favorite) {
+        this.favorite = favorite;
+    }
+
+    public Sarcasm toggleFavorite(String user) {
+        if(getFavorites().contains(user)) {
+            getFavorites().remove(user);
+        } else {
+            getFavorites().add(user);
+        }
+        this.checkState(user);
         return this;
+    }
+
+    public Sarcasm checkState(String user) {
+        this.favorite = getFavorites().contains(user);
+        if(getVotes().containsKey(user)){
+            final Integer vote = getVotes().get(user);
+            if(vote == 1) {
+                this.setVotedUp(true);
+            } else if(vote == -1) {
+                this.setVotedDown(true);
+            }
+        }
+        return this;
+    }
+
+    public boolean isVotedUp() {
+        return votedUp;
+    }
+
+    public void setVotedUp(boolean votedUp) {
+        this.votedUp = votedUp;
+    }
+
+    public boolean isVotedDown() {
+        return votedDown;
+    }
+
+    public void setVotedDown(boolean votedDown) {
+        this.votedDown = votedDown;
     }
 
     @Override

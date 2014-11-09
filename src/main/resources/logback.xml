@@ -21,9 +21,10 @@
         <encoder class="net.logstash.logback.encoder.LogstashEncoder" />
     </appender>
 
-    <!--<logger name="org.springframework" level="WARN" />-->
+    <logger name="org.springframework" level="WARN" />
     <logger name="org.springframework.aop.interceptor" level="TRACE" />
     <logger name="org.springframework.web" level="WARN" />
+    <logger name="org.springframework.security" level="WARN" />
     <logger name="org.hibernate" level="WARN" />
     <logger name="org.apache" level="WARN" />
     <logger name="com.rizzo" level="INFO" />

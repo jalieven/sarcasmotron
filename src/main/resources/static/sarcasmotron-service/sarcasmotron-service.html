@@ -1,0 +1,57 @@
+<link rel="import" href="../components/polymer/polymer.html">
+<link rel="import" href="../components/core-ajax/core-ajax.html">
+<!-- 
+  `<sarcasmotron-service>` provides an API for a fake service --
+  _unquote_, the read-only social networking service!
+
+  Provides a very simple API: `posts` returns the list of posts.
+  `setFavorite` pretends to persist a user's favorite choice.
+
+  @element post-service
+  @demo 
+  @homepage http://www.polymer-project.org/docs/start/tutorial.html
+-->
+<polymer-element name="sarcasmotron-service" attributes="posts">
+    <template>
+        <style>
+            :host {
+                display: none;
+            }
+        </style>
+        <core-ajax id="ajax"
+                   auto
+                   url="../api/posts.json"
+                   on-core-response="{{sarcasmsLoaded}}"
+                   handleAs="json">
+        </core-ajax>
+    </template>
+    <script>
+        Polymer('sarcasmotron-service', {
+            created: function () {
+                this.posts = [];
+            },
+            sarcasmsLoaded: function () {
+                // Make a copy of the loaded data
+                this.posts = this.$.ajax.response.slice(0);
+                for (var i = 0; i < this.posts.length; i++) {
+                    var post = this.posts[i];
+                    post.timestamp = moment(post.timestamp, "YYYY-MM-DD'T'HH:mm:ss.SSSSZ").fromNow();
+                }
+            },
+            /**
+             * Update the service with the current favorite value.
+             * (Two-way data binding updates the favorite value
+             * stored locally.) If this was a real service, this
+             * method would do something useful.
+             *
+             * @method setFavorite
+             * @param uid {Number} Unique ID for post.
+             * @param isFavorite {Boolean} True if the user marked this post as a favorite.
+             */
+            setFavorite: function (uid, isFavorite) {
+                // no service backend, just log the change
+                console.log('Favorite changed: ' + uid + ", now: " + isFavorite);
+            }
+        });
+    </script>
+</polymer-element>

@@ -58,14 +58,14 @@
                 <paper-icon-button
                         id="thumb-up"
                         icon="thumb-up"
-                        disabled?="{{ votedDown }}"
+                        disabled?="{{votedDown || votedUp}}"
                         on-tap="{{voteUp}}">
                 </paper-icon-button>
 
                 <paper-icon-button
                         id="thumb-down"
                         icon="thumb-down"
-                        disabled?="{{ votedUp }}"
+                        disabled?="{{votedUp || votedDown}}"
                         on-tap="{{voteDown}}">
                 </paper-icon-button>
 
@@ -77,7 +77,8 @@
 
                 <paper-icon-button
                         id="comment"
-                        icon="editor:mode-comment">
+                        icon="editor:mode-comment"
+                        on-tap="{{comment}}">
                 </paper-icon-button>
             </div>
 
@@ -102,17 +103,23 @@
                     reflect: true
                 }
             },
+            ready: function() {
+                console.log("FAV:" + this.favorite);
+            },
             favorited: function(event, detail, sender) {
                 this.favorite = !this.favorite;
                 this.fire('favorited');
             },
             voteUp: function(event, detail, sender) {
                 this.votedUp = !this.votedUp;
-                this.fire('vote-up');
+                this.fire('vote-up', {});
             },
             voteDown: function(event, detail, sender) {
                 this.votedDown = !this.votedDown;
-                this.fire('vote-down');
+                this.fire('vote-down', {});
+            },
+            comment: function(event, detail, sender) {
+                this.fire('comment', {});
             }
         });
     </script>

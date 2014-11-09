@@ -53,7 +53,7 @@ import static org.junit.Assert.assertTrue;
 public class RestApiTest {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(RestApiTest.class);
-    private static final String SSO_TOKEN = "AQIC5wM2LY4SfczIs9hUC15EiPmsy5GMlN_ubqje5bFjZ5g.*AAJTSQACMDIAAlNLABIxNTMzNjYzMTk0NTMyNTA0NjQAAlMxAAIwMQ..*";
+    private static final String SSO_TOKEN = "AQIC5wM2LY4SfczgMuIGS_LaK9kU2kFBtsXXT_YMDKJVRz4.*AAJTSQACMDIAAlNLABM4NzUwODg3MDk0NTIzNTQ4NjI1AAJTMQACMDE.*";
 
     @Value("${local.server.port}")
     private int port = 0;
@@ -196,9 +196,9 @@ public class RestApiTest {
                 .when().get("/sarcasm/{id}", ownSarcasmId)
                 .then().log().all()
                 .statusCode(HttpStatus.OK.value())
-                .body("user", Matchers.is("gert"))
+                .body("user", Matchers.is(ownSarcasm.getUser()))
                 .body("voteTotal", Matchers.is(-1))
-                .body("quote", Matchers.is("This isn't an office. It's Hell with fluorescent lighting."));
+                .body("quote", Matchers.is(newSarcasm.getQuote()));
     }
 
     @Test

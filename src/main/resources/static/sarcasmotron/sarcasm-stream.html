@@ -1,7 +1,8 @@
 <link rel="import" href="../components/polymer/polymer.html">
+<link rel="import" href="../components/paper-toast/paper-toast.html">
 <link rel="import" href="sarcasm-card.html">
 
-<polymer-element name="sarcasm-stream" attributes="show posts">
+<polymer-element name="sarcasm-stream" attributes="show">
     <template>
         <style>
             :host {
@@ -16,17 +17,27 @@
             }
         </style>
 
-
         <div layout vertical center>
 
-            <template repeat="{{post in posts}}">
+            <paper-toast id="favoriteToast" text="Favorite updated!"></paper-toast>
+            <paper-toast id="upvoteToast" text="Upvote cast successfully"></paper-toast>
+            <paper-toast id="downvoteToast" text="Downvote cast successfully"></paper-toast>
 
-                <sarcasm-card favorite="{{post.favorite}}" on-favorited="{{handleFavorite}}" hidden?="{{show == 'favorites' && !post.favorite}}">
-                    <img src="{{post.avatar}}" width="70" height="70">
-                    <h2>{{post.username}}</h2>
-                    <p class="context"><b>{{post.timestamp}}</b></p>
-                    <p>{{post.sarcasm}}</p>
-                    <p class="context" align="right"><i>{{post.context}}</i></p>
+            <template repeat="{{sarcasm in sarcasms}}">
+
+                <sarcasm-card favorite="{{sarcasm.favorite}}"
+                              votedUp="{{sarcasm.votedUp}}"
+                              votedDown="{{sarcasm.votedDown}}"
+                              on-favorited="{{handleFavorite}}"
+                              on-vote-up="{{handleVoteUp}}"
+                              on-vote-down="{{handleVoteDown}}"
+                              on-comment="{{handleComment}}"
+                              hidden?="{{show == 'favorites' && !sarcasm.favorite}}">
+                    <img src="{{sarcasm.avatar}}" width="70" height="70">
+                    <h2>{{sarcasm.user}}</h2>
+                    <p class="context"><b>{{sarcasm.timestamp | toHumanReadable}}</b></p>
+                    <p>{{sarcasm.quote}}</p>
+                    <p class="context" align="right"><i>{{sarcasm.context}}</i></p>
                 </sarcasm-card>
 
             </template>
@@ -38,10 +49,117 @@
     <script>
         Polymer({
             ready: function() {
+                var that = this;
+
+                var originalSync = Backbone.sync;
+                Backbone.sync = function(method, model, options) {
+                    options.headers = options.headers || {};
+                    _.extend(options.headers, { "openamssoid" : getSSOToken()});
+                    originalSync.call(model, method, model, options);
+                };
+
+                var SarcasmModel = Backbone.Model.extend({
+                    initialize : function() {
+                        console.log("Init Backbone Sarcasm");
+                    },
+                    urlRoot: '/sarcasm',
+                    favorite: function(opts) {
+                        var model = this, url = model.url() + '/favorite',
+                                options = {url: url, type: 'POST'};
+                        _.extend(options, opts);
+                        return (this.sync || Backbone.sync).call(this, null, this, options);
+                    },
+                    voteUp: function(opts) {
+                        var model = this, url = model.url() + '/upvote',
+                                options = {url: url, type: 'POST'};
+                        _.extend(options, opts);
+                        return (this.sync || Backbone.sync).call(this, null, this, options);
+                    },
+                    voteDown: function(opts) {
+                        var model = this, url = model.url() + '/downvote',
+                                options = {url: url, type: 'POST'};
+                        _.extend(options, opts);
+                        return (this.sync || Backbone.sync).call(this, null, this, options);
+                    }
+                });
+                var SarcasmCollection = Backbone.Collection.extend({
+                    model: SarcasmModel,
+                    url: '/sarcasm'
+                });
+                var sarcasms = new SarcasmCollection();
+                sarcasms.fetch({
+                    success: function (collection, response, options) {
+                        that.collection = collection;
+                        that.sarcasms = collection.toJSON();
+                        for (var i = 0; i < that.sarcasms.length; i++) {
+                            var sarcasm = that.sarcasms[i];
+                            sarcasm.avatar = '../images/avatar-01.svg';
+                        }
+                    },
+                    error: function(collection, response, options) {
+                        console.log("Error while fetching sarcasms: " + response);
+                    },
+                    dataType: "json"});
             },
             handleFavorite: function(event, detail, sender) {
-                var post = sender.templateInstance.model.post;
-                this.$.service.setFavorite(post.id, post.favorite);
+                var that = this;
+                var toast = this.$.favoriteToast;
+                var sarcasm = sender.templateInstance.model.sarcasm;
+                var favoriteModel = this.collection.get(sarcasm.id);
+                favoriteModel.favorite({
+                    success: function (model, response, options) {
+                        toast.show();
+                    },
+                    error: function (model, response, options) {
+                        console.log("Error favoriting")
+                    }
+                });
+            },
+            handleVoteUp: function(event, detail, sender) {
+                var that = this;
+                var toast = this.$.upvoteToast;
+                console.log("VOTE UP: " + sender.templateInstance.model.sarcasm);
+                var sarcasm = sender.templateInstance.model.sarcasm;
+                var voteUpModel = this.collection.get(sarcasm.id);
+                voteUpModel.voteUp({
+                    success: function (model, response, options) {
+                        toast.show();
+                    },
+                    error: function (model, response, options) {
+                        if(model.status == 410) {
+                            toast.text = model.responseJSON.message;
+                            toast.show();
+                            sarcasm.votedDown = false;
+                            sarcasm.votedUp = false;
+                        }
+                    }
+                });
+            },
+            handleVoteDown: function(event, detail, sender) {
+                var that = this;
+                var toast = this.$.downvoteToast;
+                console.log("VOTE DOWN: " + sender.templateInstance.model.sarcasm);
+                var sarcasm = sender.templateInstance.model.sarcasm;
+                var voteUpModel = this.collection.get(sarcasm.id);
+                voteUpModel.voteDown({
+                    success: function (model, response, options) {
+                        toast.show();
+                    },
+                    error: function (model, response, options) {
+                        if(model.status == 410) {
+                            toast.text = model.responseJSON.message;
+                            toast.show();
+                            sarcasm.votedDown = false;
+                            sarcasm.votedUp = false;
+                        }
+                    }
+                });
+            },
+            handleComment: function(event, detail, sender) {
+                console.log("COMMENT: " + sender.templateInstance.model.sarcasm);
+            },
+            toHumanReadable: function(timestamp) {
+                return moment(timestamp, "YYYY-MM-DD'T'HH:mm:ss.SSSZ").fromNow()
             }
         });
     </script>

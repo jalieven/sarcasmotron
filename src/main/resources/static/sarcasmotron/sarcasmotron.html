@@ -11,7 +11,7 @@
 <link rel="import" href="../components/paper-shadow/paper-shadow.html">
 <link rel="import" href="../components/paper-input/paper-input.html">
 <link rel="import" href="../components/flatiron-director/flatiron-director.html">
-<link rel="import" href="../post-service/post-service.html">
+<link rel="import" href="../sarcasmotron-service/sarcasmotron-service.html">
 <link rel="import" href="sarcasm-stream.html">
 <link rel="import" href="sarcasm-add.html">
 
@@ -75,8 +75,6 @@
             }
         </style>
 
-        <post-service id="service" posts="{{posts}}"></post-service>
-
         <flatiron-director route="{{route}}" autoHash/>
 
         <core-a11y-keys target="{{parentElement}}"
@@ -124,7 +122,7 @@
                 <core-animated-pages id="anim" transitions="slide-from-right cross-fade"
                                      valueattr="id" selected="{{route}}">
                     <section id="stream">
-                        <sarcasm-stream show="all" posts="{{posts}}" cross-fade slide-from-right></sarcasm-stream>
+                        <sarcasm-stream show="all" cross-fade slide-from-right></sarcasm-stream>
                     </section>
                     <section id="new">
                         <sarcasm-add cross-fade slide-from-right></sarcasm-add>
@@ -140,7 +138,7 @@
                         </div>
                     </section>
                     <section id="favorite">
-                        <sarcasm-stream show="favorites" posts="{{posts}}" cross-fade slide-from-right></sarcasm-stream>
+                        <sarcasm-stream show="favorites" cross-fade slide-from-right></sarcasm-stream>
                     </section>
                     <section id="search">
                         <div cross-fade slide-from-right>

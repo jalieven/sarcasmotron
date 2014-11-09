@@ -5,14 +5,13 @@ import com.rizzo.sarcasmotron.calc.VoteCalculator;
 import com.rizzo.sarcasmotron.domain.calc.VoteStats;
 import com.rizzo.sarcasmotron.domain.mongodb.Comment;
 import com.rizzo.sarcasmotron.domain.mongodb.Sarcasm;
+import com.rizzo.sarcasmotron.domain.mongodb.User;
 import com.rizzo.sarcasmotron.domain.web.*;
 import com.rizzo.sarcasmotron.mongodb.MongoDBSarcasmRepository;
 import com.rizzo.sarcasmotron.mongodb.MongoDBUserRepository;
-import net.logstash.logback.encoder.org.apache.commons.lang.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
-import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -41,17 +40,29 @@ public class SarcasmotronRestController {
     private SecurityContextHolderStrategy securityContextHolderStrategy;
 
     @RequestMapping(value = "/sarcasm", method = RequestMethod.POST)
-    public @ResponseBody ResponseEntity<Sarcasm> createSarcasm(@RequestBody @Valid final Sarcasm sarcasm) {
-        return new ResponseEntity<>(mongoDBSarcasmRepository.save(sarcasm), HttpStatus.CREATED);
+    public @ResponseBody ResponseEntity<Sarcasm> createSarcasm(@RequestBody final Sarcasm sarcasm) {
+        final String user = sarcasm.getUser();
+        final User foundUser = mongoDBUserRepository.findOneByNickName(user);
+        final User foundCreator = mongoDBUserRepository.findOneByNickName(getCurrentUserNickname());
+        if(foundUser != null && foundCreator != null) {
+            sarcasm.setCreator(foundCreator.getNickName());
+            return new ResponseEntity<>(mongoDBSarcasmRepository.save(sarcasm), HttpStatus.CREATED);
+        } else {
+            return new ResponseEntity<>(HttpStatus.NOT_FOUND);
+        }
     }
 
     @RequestMapping(value = "/sarcasm", method = RequestMethod.GET)
-    public @ResponseBody ResponseEntity<Sarcasms> getSarcasms(
+    public @ResponseBody ResponseEntity<List<Sarcasm>> getSarcasms(
             @RequestParam(value = "page", defaultValue = "0") final Integer page,
             @RequestParam(value = "size", defaultValue = "50") final Integer size) {
-        final PageRequest pageRequest = new PageRequest(page, size);
+        final PageRequest pageRequest = new PageRequest(page, size,
+                new Sort(new Sort.Order(Sort.Direction.DESC, "timestamp")));
         final Page<Sarcasm> sarcasmPage = mongoDBSarcasmRepository.findAll(pageRequest);
-        return new ResponseEntity<>(new Sarcasms().setPages(sarcasmPage.getTotalPages()).setTotal(sarcasmPage.getTotalElements()).setSarcasms(sarcasmPage.getContent()), HttpStatus.OK);
+        for (Sarcasm sarcasm : sarcasmPage) {
+            sarcasm.checkState(getCurrentUserNickname());
+        }
+        return new ResponseEntity<>(sarcasmPage.getContent(), HttpStatus.OK);
     }
 
     @RequestMapping(value = "/sarcasm/{id}", method = RequestMethod.GET)
@@ -155,8 +166,6 @@ public class SarcasmotronRestController {
         return responseEntity;
     }
 
-
-
     @RequestMapping(value = "/sarcasm/{id}/comment", method = RequestMethod.GET)
     public @ResponseBody ResponseEntity<List<Comment>> getComments(@PathVariable("id") String id) {
         ResponseEntity<List<Comment>> responseEntity;
@@ -169,15 +178,14 @@ public class SarcasmotronRestController {
         return responseEntity;
     }
 
-
     @RequestMapping(value = "/sarcasm/{id}/favorite", method = RequestMethod.POST)
-    public @ResponseBody ResponseEntity createFavorite(@PathVariable("id") String id) {
-        ResponseEntity responseEntity;
+    public @ResponseBody ResponseEntity<Sarcasm> createFavorite(@PathVariable("id") String id) {
+        ResponseEntity<Sarcasm> responseEntity;
         final Sarcasm foundSarcasm = mongoDBSarcasmRepository.findOne(id);
         if(foundSarcasm != null) {
-            foundSarcasm.addFavorite(getCurrentUserNickname());
+            foundSarcasm.toggleFavorite(getCurrentUserNickname());
             mongoDBSarcasmRepository.save(foundSarcasm);
-            responseEntity = new ResponseEntity<>(HttpStatus.CREATED);
+            responseEntity = new ResponseEntity<>(foundSarcasm, HttpStatus.CREATED);
         } else {
             responseEntity = new ResponseEntity<>(HttpStatus.NOT_FOUND);
         }
@@ -238,8 +246,6 @@ public class SarcasmotronRestController {
             return new ResponseEntity<>(stats.setMessage("VoteStats calculation success!"), HttpStatus.OK);
         }
     }
-
-
 
     private String getCurrentUserNickname() {
         final SecurityContext securityContext = this.securityContextHolderStrategy.getContext();

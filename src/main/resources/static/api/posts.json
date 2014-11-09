@@ -2,7 +2,7 @@
     {
         "id": 1,
         "timestamp": "2014-10-29T14:06:26.747+0100",
-        "sarcasm": "Don't like my sarcasm? Well, I don't like your stupid!",
+        "quote": "Don't like my sarcasm? Well, I don't like your stupid!",
         "context": "Someone made a less intelligent remark.",
         "username": "Jan Lievens",
         "avatar": "../images/avatar-01.svg",
@@ -11,7 +11,7 @@
     {
         "id": 2,
         "timestamp": "2014-10-29T14:06:26.747+0100",
-        "sarcasm": "My level of sarcasm is to a point where I don't know I'm kidding or not.",
+        "quote": "My level of sarcasm is to a point where I don't know I'm kidding or not.",
         "context": "A self-realization.",
         "username": "Gert Dewit",
         "avatar": "../images/avatar-02.svg",
@@ -20,7 +20,7 @@
     {
         "id": 3,
         "timestamp": "2014-11-06T12:06:26.747+0100",
-        "sarcasm": "Before you tell me what I did wrong, I want you to know that I don't care.",
+        "quote": "Before you tell me what I did wrong, I want you to know that I don't care.",
         "context": "Another fine day at the office.",
         "username": "Joost Bouckenooghe",
         "avatar": "../images/avatar-04.svg",
@@ -29,7 +29,7 @@
     {
         "id": 4,
         "timestamp": "2014-09-10T17:06:26.747+0100",
-        "sarcasm": "Oh, I'm sorry... Did the middle of my sentence interrupt the beginning of yours?",
+        "quote": "Oh, I'm sorry... Did the middle of my sentence interrupt the beginning of yours?",
         "context": "Who's grumpy this morning?",
         "username": "Guy Wauters",
         "avatar": "../images/avatar-08.svg",
@@ -38,7 +38,7 @@
     {
         "id": 5,
         "timestamp": "2014-10-29T14:06:26.747+0100",
-        "sarcasm": "I would explain it to you but I'm all out of puppets and crayons.",
+        "quote": "I would explain it to you but I'm all out of puppets and crayons.",
         "context": "When asked a question about the ESB?",
         "username": "Jan Lievens",
         "avatar": "../images/avatar-01.svg",
@@ -47,7 +47,7 @@
     {
         "id": 6,
         "timestamp": "2014-10-19T10:22:26.747+0100",
-        "sarcasm": "You remember when I asked for your opinion? Yeah, neither do I.",
+        "quote": "You remember when I asked for your opinion? Yeah, neither do I.",
         "context": "Teamplayer Tom.",
         "username": "Tom Van Gulck",
         "avatar": "../images/avatar-11.svg",
@@ -56,7 +56,7 @@
     {
         "id": 7,
         "timestamp": "2014-10-28T14:06:26.747+0100",
-        "sarcasm": "If you don't like what I'm saying, you would hate what I'm thinking.",
+        "quote": "If you don't like what I'm saying, you would hate what I'm thinking.",
         "context": "Armand hasn't 'mayed' this morning.",
         "username": "Armand",
         "avatar": "../images/avatar-10.svg",
@@ -65,7 +65,7 @@
     {
         "id": 8,
         "timestamp": "2014-03-29T10:02:26.744+0100",
-        "sarcasm": "It's nice when someone can reply to your sarcasm with sarcasm instead of being offended!",
+        "quote": "It's nice when someone can reply to your sarcasm with sarcasm instead of being offended!",
         "context": "Deep wisdom.",
         "username": "Joost Bouckenooghe",
         "avatar": "../images/avatar-04.svg",
