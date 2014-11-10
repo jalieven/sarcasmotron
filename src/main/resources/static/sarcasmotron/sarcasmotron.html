@@ -1,9 +1,11 @@
+<link rel="import" href="../components/core-a11y-keys/core-a11y-keys.html">
 <link rel="import" href="../components/core-scroll-header-panel/core-scroll-header-panel.html">
 <link rel="import" href="../components/core-toolbar/core-toolbar.html">
 <link rel="import" href="../components/core-tooltip/core-tooltip.html">
 <link rel="import" href="../components/core-input/core-input.html">
 <link rel="import" href="../components/core-item/core-item.html">
 <link rel="import" href="../components/core-menu/core-menu.html">
+<link rel="import" href="../components/core-signals/core-signals.html">
 <link rel="import" href="../components/core-menu-button/core-menu-button.html">
 <link rel="import" href="../components/core-animated-pages/core-animated-pages.html">
 <link rel="import" href="../components/core-animated-pages/transitions/slide-up.html">
@@ -11,11 +13,10 @@
 <link rel="import" href="../components/paper-shadow/paper-shadow.html">
 <link rel="import" href="../components/paper-input/paper-input.html">
 <link rel="import" href="../components/flatiron-director/flatiron-director.html">
-<link rel="import" href="../sarcasmotron-service/sarcasmotron-service.html">
 <link rel="import" href="sarcasm-stream.html">
 <link rel="import" href="sarcasm-add.html">
 
-<polymer-element name="sarcasmotron-app" on-sarcasm-added="{{handleAddedSarcasm}}">
+<polymer-element name="sarcasmotron-app">
     <template>
         <style>
             core-scroll-header-panel {
@@ -78,8 +79,10 @@
         <flatiron-director route="{{route}}" autoHash/>
 
         <core-a11y-keys target="{{parentElement}}"
-                        keys="left right"
+                        keys="alt+left alt+right"
                         on-keys-pressed="{{keyHandler}}"></core-a11y-keys>
+
+        <core-signals on-core-signal-sarcasm-added="{{handleSarcasmAdded}}"></core-signals>
 
         <core-scroll-header-panel id="scroll" condenses keepCondensedHeader>
 
@@ -95,6 +98,10 @@
                         <paper-icon-button id="new-btn" route="new" icon="drive-file"
                                            on-click="{{changeSection}}"></paper-icon-button>
                     </core-tooltip>
+                    <core-tooltip label="Your favorites" position="bottom" class="fancy">
+                        <paper-icon-button id="favorite-btn" route="favorite"  icon="favorite"
+                                           on-click="{{changeSection}}"></paper-icon-button>
+                    </core-tooltip>
                     <core-tooltip label="Statistics" position="bottom" class="fancy">
                         <paper-icon-button id="stats-btn" route="stats" icon="drive-chart"
                                            on-click="{{changeSection}}"></paper-icon-button>
@@ -103,13 +110,9 @@
                         <paper-icon-button id="trend-btn" route="trend" icon="trending-up"
                                            on-click="{{changeSection}}"></paper-icon-button>
                     </core-tooltip>
-                    <core-tooltip label="Your favorites" position="bottom" class="fancy">
-                        <paper-icon-button id="favorite-btn"route="favorite"  icon="favorite"
-                                           on-click="{{changeSection}}"></paper-icon-button>
-                    </core-tooltip>
                     <div flex></div>
                     <core-tooltip label="Search 'em!" position="right" class="fancy">
-                        <paper-icon-button id="search-btn"route="left" icon="search"
+                        <paper-icon-button id="search-btn" route="left" icon="search"
                                            on-click="{{changeSection}}"></paper-icon-button>
                     </core-tooltip>
                     <paper-icon-button id="more" icon="more-vert"></paper-icon-button>
@@ -122,7 +125,7 @@
                 <core-animated-pages id="anim" transitions="slide-from-right cross-fade"
                                      valueattr="id" selected="{{route}}">
                     <section id="stream">
-                        <sarcasm-stream show="all" cross-fade slide-from-right></sarcasm-stream>
+                        <sarcasm-stream show="all" stream="{{stream}}" cross-fade slide-from-right></sarcasm-stream>
                     </section>
                     <section id="new">
                         <sarcasm-add cross-fade slide-from-right></sarcasm-add>
@@ -138,7 +141,7 @@
                         </div>
                     </section>
                     <section id="favorite">
-                        <sarcasm-stream show="favorites" cross-fade slide-from-right></sarcasm-stream>
+                        <sarcasm-stream show="favorites" stream="{{stream}}" cross-fade slide-from-right></sarcasm-stream>
                     </section>
                     <section id="search">
                         <div cross-fade slide-from-right>
@@ -163,6 +166,50 @@
             ready: function() {
                 this.route = this.route || 'stream';
             },
+            created: function() {
+                var originalSync = Backbone.sync;
+                Backbone.sync = function(method, model, options) {
+                    options.headers = options.headers || {};
+                    _.extend(options.headers, { "openamssoid" : getSSOToken()});
+                    originalSync.call(model, method, model, options);
+                };
+
+                var SarcasmModel = Backbone.Model.extend({
+                    urlRoot: '/sarcasm',
+                    favorite: function(opts) {
+                        var model = this, url = model.url() + '/favorite',
+                                options = {url: url, type: 'POST'};
+                        _.extend(options, opts);
+                        return (this.sync || Backbone.sync).call(this, null, this, options);
+                    },
+                    voteUp: function(opts) {
+                        var model = this, url = model.url() + '/upvote',
+                                options = {url: url, type: 'POST'};
+                        _.extend(options, opts);
+                        return (this.sync || Backbone.sync).call(this, null, this, options);
+                    },
+                    voteDown: function(opts) {
+                        var model = this, url = model.url() + '/downvote',
+                                options = {url: url, type: 'POST'};
+                        _.extend(options, opts);
+                        return (this.sync || Backbone.sync).call(this, null, this, options);
+                    }
+                });
+                var SarcasmCollection = Backbone.Collection.extend({
+                    model: SarcasmModel,
+                    url: '/sarcasm',
+                    comparator: function (a, b) {
+                        var one = moment(a.get("timestamp"), "YYYY-MM-DD'T'HH:mm:ss.SSSSZ");
+                        var two = moment(b.get("timestamp"), "YYYY-MM-DD'T'HH:mm:ss.SSSSZ");
+                        if(one.isAfter(two)) {
+                            return -1;
+                        } else {
+                            return 1;
+                        }
+                    }
+                });
+                this.stream = new SarcasmCollection();
+            },
             changeSection: function(event, detail, sender) {
                 this.route = sender.getAttribute('route');
             },
@@ -176,6 +223,22 @@
                         pages.selectNext();
                         break;
                 }
+            },
+            handleSarcasmAdded: function(event, detail, sender) {
+                var that = this;
+                this.stream.create(detail,
+                        {
+                            wait : true,
+                            success : function(model, response, options){
+                                console.log("Sarcasm Added!!!!");
+                                that.fire('core-signal',
+                                        {name: "stream-changed", data: model}
+                                );
+                            },
+                            error : function(err) {
+                                console.log("Fail saving sarcasm: " + err);
+                            }
+                        });
             }
 
         });

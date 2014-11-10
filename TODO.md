@@ -6,5 +6,3 @@
 - Add tovote functionality to CLI
 - Add avatar to user and return it along
 - Make error logging in browser console uniform
-- Disable left-right on new screen: very annoying when navigating inputs
-- !!!!!Pull out the backbone collection into sarcasmotron and inject in stream and add !!!!

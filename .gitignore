@@ -30,3 +30,5 @@ Thumbs.db
 # Bowen components #
 ####################
 src/main/resources/static/components/
+src/main/resources/static/vulcanized.html
+src/main/resources/static/index.html

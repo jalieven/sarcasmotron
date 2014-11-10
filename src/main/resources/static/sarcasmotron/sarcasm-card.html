@@ -103,9 +103,6 @@
                     reflect: true
                 }
             },
-            ready: function() {
-                console.log("FAV:" + this.favorite);
-            },
             favorited: function(event, detail, sender) {
                 this.favorite = !this.favorite;
                 this.fire('favorited');
