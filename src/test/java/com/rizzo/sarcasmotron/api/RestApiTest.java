@@ -11,6 +11,7 @@ import com.rizzo.sarcasmotron.domain.calc.VoteStats;
 import com.rizzo.sarcasmotron.domain.mongodb.Comment;
 import com.rizzo.sarcasmotron.domain.mongodb.Sarcasm;
 import com.rizzo.sarcasmotron.domain.mongodb.User;
+import com.rizzo.sarcasmotron.domain.web.SearchRequest;
 import com.rizzo.sarcasmotron.domain.web.StatsRequest;
 import com.rizzo.sarcasmotron.domain.web.TrendRequest;
 import com.rizzo.sarcasmotron.elasticsearch.ElasticsearchSarcasmRepository;
@@ -53,7 +54,7 @@ import static org.junit.Assert.assertTrue;
 public class RestApiTest {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(RestApiTest.class);
-    private static final String SSO_TOKEN = "AQIC5wM2LY4SfczgMuIGS_LaK9kU2kFBtsXXT_YMDKJVRz4.*AAJTSQACMDIAAlNLABM4NzUwODg3MDk0NTIzNTQ4NjI1AAJTMQACMDE.*";
+    private static final String SSO_TOKEN = "AQIC5wM2LY4SfczgGeS1QvAKfRIlvh2FAhPxfxSoV_AmORw.*AAJTSQACMDIAAlNLABM1NDc0NTMyMTYyNDY4Mzk5MDc3AAJTMQACMDE.*";
 
     @Value("${local.server.port}")
     private int port = 0;
@@ -537,6 +538,67 @@ public class RestApiTest {
                 .body("user", Matchers.contains(sarcasmZero.getUser()))
                 .body("creator", Matchers.not(Matchers.contains(sarcasmOne.getCreator())))
                 .body("user", Matchers.not(Matchers.contains(sarcasmOne.getUser())));
+    }
+
+    @Test
+    public void testSarcasmSearch() {
+
+        LOGGER.debug("TEST: testSarcasmSearch");
+
+        final Sarcasm sarcasmTwo = new Sarcasm()
+                .setQuote("Aapenootjes")
+                .setContext("Completely irrelevant!")
+                .stamp(DateTime.now().minus(org.joda.time.Days.days(1)))
+                .setCreator("gert")
+                .setUser("tom");
+        mongoDBSarcasmRepository.save(sarcasmTwo);
+
+        final Sarcasm sarcasmOne = new Sarcasm()
+                .setQuote("Aap noot")
+                .setContext("Completely irrelevant, friendship!")
+                .stamp(DateTime.now().minus(org.joda.time.Days.days(1)))
+                .setCreator("jalie")
+                .setUser("joost");
+        sarcasmOne.upVote("gert");
+        sarcasmOne.upVote("tom");
+        mongoDBSarcasmRepository.save(sarcasmOne);
+
+        final Sarcasm sarcasmZero = new Sarcasm()
+                .setQuote("That ship has sailed")
+                .setContext("Completely relevant!")
+                .stamp(DateTime.now().minus(org.joda.time.Days.days(2)))
+                .setCreator("joost")
+                .setUser("jalie");
+        sarcasmZero.upVote("gert");
+        sarcasmZero.upVote("tom");
+        sarcasmZero.upVote("joost");
+        mongoDBSarcasmRepository.save(sarcasmZero);
+
+        given().log().all().header("openamssoid", SSO_TOKEN)
+                .contentType(ContentType.JSON).body(
+                    new SearchRequest().setQuery("quote:skip~1 AND voteTotal:>1"))
+                .when().post("/sarcasm/search")
+                .then().log().all()
+                .statusCode(HttpStatus.OK.value())
+                .body("user", Matchers.contains(sarcasmZero.getUser()));
+
+        given().log().all().header("openamssoid", SSO_TOKEN)
+                .contentType(ContentType.JSON).body(
+                new SearchRequest().setQuery("user:tom AND voteTotal:<1"))
+                .when().post("/sarcasm/search")
+                .then().log().all()
+                .statusCode(HttpStatus.OK.value())
+                .body("user", Matchers.contains(sarcasmTwo.getUser()));
+
+        given().log().all().header("openamssoid", SSO_TOKEN)
+                .contentType(ContentType.JSON).body(
+                new SearchRequest().setQuery("relevant~3"))
+                .when().post("/sarcasm/search")
+                .then().log().all()
+                .statusCode(HttpStatus.OK.value())
+                .body("user", Matchers.containsInAnyOrder(
+                        sarcasmOne.getUser(), sarcasmTwo.getUser(), sarcasmZero.getUser()));
+
     }
 
     private Sarcasm createSarcasm(String user, String creator, DateTime timestamp) {

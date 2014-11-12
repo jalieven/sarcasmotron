@@ -9,11 +9,12 @@
 <link rel="import" href="../components/core-menu-button/core-menu-button.html">
 <link rel="import" href="../components/core-animated-pages/core-animated-pages.html">
 <link rel="import" href="../components/core-animated-pages/transitions/slide-up.html">
-<link rel="import" href="../components/core-animated-pages/transitions/slide-from-right.html">
+<!--<link rel="import" href="../components/core-animated-pages/transitions/slide-from-right.html">-->
 <link rel="import" href="../components/paper-shadow/paper-shadow.html">
 <link rel="import" href="../components/paper-input/paper-input.html">
 <link rel="import" href="../components/flatiron-director/flatiron-director.html">
 <link rel="import" href="sarcasm-stream.html">
+<link rel="import" href="sarcasm-search.html">
 <link rel="import" href="sarcasm-add.html">
 
 <polymer-element name="sarcasmotron-app">
@@ -110,28 +111,22 @@
                         <paper-icon-button id="trend-btn" route="trend" icon="trending-up"
                                            on-click="{{changeSection}}"></paper-icon-button>
                     </core-tooltip>
-                    <div flex></div>
-                    <core-tooltip label="Search 'em!" position="right" class="fancy">
-                        <paper-icon-button id="search-btn" route="left" icon="search"
-                                           on-click="{{changeSection}}"></paper-icon-button>
-                    </core-tooltip>
-                    <paper-icon-button id="more" icon="more-vert"></paper-icon-button>
                 </div>
                 <paper-shadow z="2"/>
             </core-toolbar>
 
             <div class="content">
 
-                <core-animated-pages id="anim" transitions="slide-from-right cross-fade"
+                <core-animated-pages id="anim" transitions="cross-fade"
                                      valueattr="id" selected="{{route}}">
                     <section id="stream">
-                        <sarcasm-stream show="all" stream="{{stream}}" cross-fade slide-from-right></sarcasm-stream>
+                        <sarcasm-stream show="all" stream="{{stream}}" cross-fade></sarcasm-stream>
                     </section>
                     <section id="new">
                         <sarcasm-add cross-fade slide-from-right></sarcasm-add>
                     </section>
                     <section id="favorite">
-                        <sarcasm-stream show="favorites" stream="{{stream}}" cross-fade slide-from-right></sarcasm-stream>
+                        <sarcasm-stream show="favorites" stream="{{stream}}" cross-fade></sarcasm-stream>
                     </section>
                     <section id="stats">
                         <div cross-fade slide-from-right>
@@ -139,11 +134,6 @@
                         </div>
                     </section>
                     <section id="trend">
-                        <div cross-fade slide-from-right>
-                            <p>Coming Soon</p>
-                        </div>
-                    </section>
-                    <section id="search">
                         <div cross-fade slide-from-right>
                             <p>Coming Soon</p>
                         </div>

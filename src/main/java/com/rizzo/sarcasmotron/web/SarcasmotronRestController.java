@@ -1,14 +1,18 @@
 package com.rizzo.sarcasmotron.web;
 
 import be.milieuinfo.security.openam.api.OpenAMUserdetails;
+import com.google.common.collect.Lists;
 import com.rizzo.sarcasmotron.calc.VoteCalculator;
 import com.rizzo.sarcasmotron.domain.calc.VoteStats;
+import com.rizzo.sarcasmotron.domain.elasticsearch.ESSarcasm;
 import com.rizzo.sarcasmotron.domain.mongodb.Comment;
 import com.rizzo.sarcasmotron.domain.mongodb.Sarcasm;
 import com.rizzo.sarcasmotron.domain.mongodb.User;
 import com.rizzo.sarcasmotron.domain.web.*;
+import com.rizzo.sarcasmotron.elasticsearch.ElasticsearchSarcasmRepository;
 import com.rizzo.sarcasmotron.mongodb.MongoDBSarcasmRepository;
 import com.rizzo.sarcasmotron.mongodb.MongoDBUserRepository;
+import org.elasticsearch.index.query.QueryStringQueryBuilder;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
@@ -23,6 +27,7 @@ import org.springframework.web.bind.annotation.*;
 import javax.validation.Valid;
 import java.text.ParseException;
 import java.util.List;
+import java.util.Map;
 
 @RestController
 public class SarcasmotronRestController {
@@ -37,7 +42,20 @@ public class SarcasmotronRestController {
     private MongoDBUserRepository mongoDBUserRepository;
 
     @Autowired
+    private ElasticsearchSarcasmRepository elasticsearchSarcasmRepository;
+
+    @Autowired
     private SecurityContextHolderStrategy securityContextHolderStrategy;
+
+    @RequestMapping(value = "/user", method = RequestMethod.GET)
+    public @ResponseBody ResponseEntity<List<User>> getUsers(
+            @RequestParam(value = "page", defaultValue = "0") final Integer page,
+            @RequestParam(value = "size", defaultValue = "50") final Integer size) {
+        final PageRequest pageRequest = new PageRequest(page, size,
+                new Sort(new Sort.Order(Sort.Direction.DESC, "givenName")));
+        final Page<User> userPage = mongoDBUserRepository.findAll(pageRequest);
+        return new ResponseEntity<>(userPage.getContent(), HttpStatus.OK);
+    }
 
     @RequestMapping(value = "/sarcasm", method = RequestMethod.POST)
     public @ResponseBody ResponseEntity<Sarcasm> createSarcasm(@RequestBody final Sarcasm sarcasm) {
@@ -247,10 +265,37 @@ public class SarcasmotronRestController {
         }
     }
 
+    @RequestMapping(value = "/sarcasm/search", method = RequestMethod.GET)
+    public @ResponseBody ResponseEntity<List<Sarcasm>> search(@RequestParam(value = "query", defaultValue = "*") String query) {
+        final QueryStringQueryBuilder stringQueryBuilder = new QueryStringQueryBuilder(query);
+        final Iterable<ESSarcasm> foundSarcasms = elasticsearchSarcasmRepository.search(stringQueryBuilder);
+        final List<Sarcasm> sarcasms = Lists.newArrayList(mapSarcasms(foundSarcasms));
+        return new ResponseEntity<>(sarcasms, HttpStatus.OK);
+    }
+
     private String getCurrentUserNickname() {
         final SecurityContext securityContext = this.securityContextHolderStrategy.getContext();
         final Authentication authentication = securityContext.getAuthentication();
         final OpenAMUserdetails details = (OpenAMUserdetails) authentication.getDetails();
         return details.getUsername();
+    }
+
+    private Iterable<Sarcasm> mapSarcasms(Iterable<ESSarcasm> esSarcasms) {
+        List<Sarcasm> sarcasms = Lists.newArrayList();
+        for (ESSarcasm esSarcasm : esSarcasms) {
+            sarcasms.add(mapSarcasm(esSarcasm));
+        }
+        return sarcasms;
+    }
+
+    private Sarcasm mapSarcasm(ESSarcasm esSarcasm) {
+        final Sarcasm sarcasm = new Sarcasm()
+                .setId(esSarcasm.getId()).setQuote(esSarcasm.getQuote())
+                .setContext(esSarcasm.getContext()).setUser(esSarcasm.getUser())
+                .setCreator(esSarcasm.getCreator())
+                .setVotes(esSarcasm.getVotes())
+                .setTimestamp(esSarcasm.getTimestamp());
+        sarcasm.checkState(getCurrentUserNickname());
+        return sarcasm;
     }
 }

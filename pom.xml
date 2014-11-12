@@ -176,7 +176,7 @@
                                 <phase>install</phase>
                                 <configuration>
                                     <target>
-                                        <copy file="${basedir}/src/main/resources/static/app.html"
+                                        <copy overwrite="true" file="${basedir}/src/main/resources/static/app.html"
                                               tofile="${basedir}/src/main/resources/static/index.html" />
                                     </target>
                                 </configuration>
@@ -221,7 +221,7 @@
                                 <phase>install</phase>
                                 <configuration>
                                     <target>
-                                        <copy file="${basedir}/src/main/resources/static/vulcanized.html"
+                                        <copy overwrite="true" file="${basedir}/src/main/resources/static/vulcanized.html"
                                               tofile="${basedir}/src/main/resources/static/index.html" />
                                     </target>
                                 </configuration>

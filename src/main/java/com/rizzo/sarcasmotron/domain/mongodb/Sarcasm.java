@@ -30,6 +30,7 @@ public class Sarcasm implements Serializable {
 
     private String user;
 
+    @JsonIgnore
     private String creator;
 
     private String quote;
@@ -73,8 +74,9 @@ public class Sarcasm implements Serializable {
         return timestamp;
     }
 
-    public void setTimestamp(String timestamp) {
+    public Sarcasm setTimestamp(String timestamp) {
         this.timestamp = timestamp;
+        return this;
     }
 
     public Sarcasm stamp(DateTime datetime) {

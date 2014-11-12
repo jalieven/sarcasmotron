@@ -35,7 +35,6 @@ public class ESSarcasm implements Serializable {
 
     private String context;
 
-    @JsonIgnore
     @Field(type = FieldType.Nested)
     private Map<String, Integer> votes;
 

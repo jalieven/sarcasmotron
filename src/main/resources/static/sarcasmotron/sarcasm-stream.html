@@ -1,6 +1,9 @@
 <link rel="import" href="../components/polymer/polymer.html">
+<link rel="import" href="../components/core-a11y-keys/core-a11y-keys.html">
 <link rel="import" href="../components/core-signals/core-signals.html">
 <link rel="import" href="../components/paper-toast/paper-toast.html">
+<link rel="import" href="../components/paper-fab/paper-fab.html">
+<link rel="import" href="../components/paper-icon-button/paper-icon-button.html">
 <link rel="import" href="sarcasm-card.html">
 
 <polymer-element name="sarcasm-stream" attributes="show stream">
@@ -10,15 +13,28 @@
                 display: block;
                 width: 100%;
             }
+            #filter {
+                background-color: #fefefe;
+                margin-bottom: 30px;
+                width: 100%;
+                padding: 20px;
+            }
             .context {
                 opacity: 0.3;
             }
             sarcasm-card {
                 margin-bottom: 30px;
             }
+            paper-fab.green {
+                background: #259b24;
+            }
         </style>
 
         <div layout vertical center>
+
+            <core-a11y-keys target="{{parentElement}}"
+                            keys="enter"
+                            on-keys-pressed="{{keyHandler}}"></core-a11y-keys>
 
             <core-signals on-core-signal-sarcasm-favorited="{{handleSarcasmFavorited}}"></core-signals>
             <core-signals on-core-signal-stream-changed="{{handleStreamChanged}}"></core-signals>
@@ -26,6 +42,14 @@
             <paper-toast id="favoriteToast" text="Favorite updated!"></paper-toast>
             <paper-toast id="upvoteToast" text="Upvote cast successfully"></paper-toast>
             <paper-toast id="downvoteToast" text="Downvote cast successfully"></paper-toast>
+
+            <div id="filter" layout horizontal>
+                <paper-input label="Filter query" value="{{query}}"></paper-input>
+                <div flex></div>
+                <paper-fab class="green" id="filter-btn" icon="filter-list"
+                                   on-click="{{handleFilter}}"></paper-fab>
+                <paper-shadow z="1"></paper-shadow>
+            </div>
 
             <template repeat="{{sarcasm in sarcasms}}">
 
@@ -39,6 +63,7 @@
                               hidden?="{{show == 'favorites' && !sarcasm.favorite}}">
                     <img src="{{sarcasm.avatar}}" width="70" height="70">
                     <h2>{{sarcasm.user}}</h2>
+                    <h4>Votes: {{sarcasm.voteTotal}}</h4>
                     <p class="context"><b>{{sarcasm.timestamp | toHumanReadable}}</b></p>
                     <p>{{sarcasm.quote}}</p>
                     <p class="context" align="right"><i>{{sarcasm.context}}</i></p>
@@ -90,6 +115,7 @@
                 var voteUpModel = this.stream.get(sarcasm.id);
                 voteUpModel.voteUp({
                     success: function (model, response, options) {
+                        sarcasm.voteTotal += 1;
                         toast.show();
                     },
                     error: function (model, response, options) {
@@ -106,9 +132,11 @@
                 var toast = this.$.downvoteToast;
                 console.log("VOTE DOWN: " + sender.templateInstance.model.sarcasm);
                 var sarcasm = sender.templateInstance.model.sarcasm;
+
                 var voteUpModel = this.stream.get(sarcasm.id);
                 voteUpModel.voteDown({
                     success: function (model, response, options) {
+                        sarcasm.voteTotal -= 1;
                         toast.show();
                     },
                     error: function (model, response, options) {
@@ -151,6 +179,33 @@
                 for (var i = 0; i < this.sarcasms.length; i++) {
                     var sarcasm = this.sarcasms[i];
                     sarcasm.avatar = '../images/avatar-01.svg';
+                }
+            },
+            handleFilter: function(event, detail, sender) {
+                var that = this;
+                var query = {'query': this.query};
+                var opts = {
+                    url: '/sarcasm/search',
+                    success: function (collection, response, options) {
+                        that.fire('core-signal',
+                                {name: "stream-changed", data: collection}
+                        );
+                        console.log("Success while searching sarcasms: " + response);
+                    },
+                    error: function(collection, response, options) {
+                        console.log("Error while searching sarcasms: " + response);
+                    },
+                    data: $.param(query),
+                    dataType: "json"};
+
+                this.stream.fetch(opts);
+            },
+            keyHandler: function(event, detail, sender) {
+                switch (detail.key) {
+                    case 'enter':
+                        this.handleFilter(event, detail, sender);
+                        break;
+
                 }
             }
         });

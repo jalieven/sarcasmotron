@@ -1,0 +1,81 @@
+<link rel="import" href="../components/polymer/polymer.html">
+<link rel="import" href="../components/core-dropdown/core-dropdown.html">
+<link rel="import" href="../components/paper-input/paper-input.html">
+<link rel="import" href="../components/paper-fab/paper-fab.html">
+<link rel="import" href="./sarcasm-stream.html">
+
+<polymer-element name="sarcasm-search" attributes="stream">
+    <template>
+        <style>
+            :host {
+                display: block;
+                position: relative;
+                padding: 20px;
+                width: 100%;
+                font-size: 1.2rem;
+                font-weight: 300;
+            }
+            .card-header {
+                margin-bottom: 5px;
+            }
+            polyfill-next-selector { content: '.card-header h2'; }
+            .card-header ::content h2 {
+                margin: 0;
+                font-size: 1.8rem;
+                font-weight: 300;
+            }
+            polyfill-next-selector { content: '.card-header img'; }
+            .card-header ::content img {
+                width: 70px;
+                border-radius: 50%;
+                margin: 10px;
+            }
+            paper-fab.green {
+                background: #259b24;
+            }
+
+        </style>
+
+
+            <div id="search-sarcasm">
+                <div class="card-header" layout horizontal center>
+                    <h3>Search a Sarcasm</h3>
+                    <div flex></div>
+                    <paper-fab icon="search" class="green" on-tap="{{handleSearch}}"></paper-fab>
+                </div>
+                <paper-input multiline label="Search query" value="{{query}}" floatingLabel></paper-input>
+                <paper-shadow z="1"></paper-shadow>
+
+            </div>
+
+        <div id="search-stream">
+            <sarcasm-stream show="all" stream="{{stream}}"></sarcasm-stream>
+        </div>
+
+    </template>
+
+    <script>
+        Polymer({
+            handleSearch: function(event, detail, sender) {
+                var that = this;
+                var query = {'query': this.query};
+                var opts = {
+                    url: '/sarcasm/search',
+                    success: function (collection, response, options) {
+                        that.fire('core-signal',
+                                {name: "stream-changed", data: collection}
+                        );
+                        console.log("Success while searching sarcasms: " + response);
+                    },
+                    error: function(collection, response, options) {
+                        console.log("Error while searching sarcasms: " + response);
+                    },
+                    data: $.param(query),
+                    dataType: "json"};
+
+                this.stream.fetch(opts);
+            }
+        });
+    </script>
+
+</polymer-element>

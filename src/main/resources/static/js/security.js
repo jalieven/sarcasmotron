@@ -1,14 +1,16 @@
 document.domain = 'mmis.be';
 
+var ssoUrl = 'http://sarcasmotron.mmis.be:1337/sso';
+
 var getSSOToken = function() {
     return $.cookie("openamssoid");
-}
+};
 
 var hasCookieAndValid = function(){
     var valid = false;
     var ssoCookie = $.cookie("openamssoid");
     if (ssoCookie != null) {
-        $.ajax({url: "http://local.mmis.be:1337/sso/isTokenValid?tokenid=" + ssoCookie,
+        $.ajax({url: ssoUrl + "/isTokenValid?tokenid=" + ssoCookie,
             success: function (result, status, xhr) {
                 console.log("Token valid result: " + result);
                 valid = (result.replace(/(\r\n|\n|\r)/gm,"").split("=")[1].toLowerCase() === 'true');
@@ -24,7 +26,7 @@ var hasCookieAndValid = function(){
 
 var login = function(username, password, location) {
     var redirect = location || "/";
-    $.ajax({url: "http://local.mmis.be:1337/sso/authenticate?username=" + username + "&password=" + password,
+    $.ajax({url: ssoUrl + "/authenticate?username=" + username + "&password=" + password,
         success: function (result, status, xhr) {
             if (xhr.status == 200) {
                 var ssoid = result.replace(/(\r\n|\n|\r)/gm,"").split("=")[1];
@@ -44,7 +46,7 @@ var login = function(username, password, location) {
 var validateSecurity = function(){
     var ssoCookie = $.cookie("openamssoid");
     if (ssoCookie != null) {
-        $.ajax({url: "http://local.mmis.be:1337/sso/isTokenValid?tokenid=" + ssoCookie,
+        $.ajax({url: ssoUrl + "/isTokenValid?tokenid=" + ssoCookie,
             success: function (result, status, xhr) {
                 // security is OK
             },
@@ -58,7 +60,7 @@ var validateSecurity = function(){
 };
 
 var authenticateSilently = function() {
-    $.ajax({url: "http://local.mmis.be:1337/sso/authenticate?username=" + username + "&password=" + password,
+    $.ajax({url: ssoUrl + "/authenticate?username=" + username + "&password=" + password,
         success: function (result, status, xhr) {
             if (xhr.status == 200) {
                 var ssoid = result.split("=")[1];
