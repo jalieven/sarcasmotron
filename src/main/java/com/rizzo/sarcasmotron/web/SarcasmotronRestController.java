@@ -16,6 +16,8 @@ import com.rizzo.sarcasmotron.mongodb.MongoDBUserRepository;
 import net.logstash.logback.encoder.org.apache.commons.io.IOUtils;
 import org.elasticsearch.index.query.NestedQueryBuilder;
 import org.elasticsearch.index.query.QueryStringQueryBuilder;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.core.io.ClassPathResource;
 import org.springframework.data.domain.Page;
@@ -31,13 +33,14 @@ import org.springframework.web.bind.annotation.*;
 
 import javax.validation.Valid;
 import java.io.IOException;
-import java.io.InputStream;
 import java.text.ParseException;
 import java.util.List;
 import java.util.Random;
 
 @RestController
 public class SarcasmotronRestController {
+
+    private static final Logger LOGGER = LoggerFactory.getLogger(SarcasmotronRestController.class);
 
     @Autowired
     private VoteCalculator voteCalculator;
@@ -86,6 +89,7 @@ public class SarcasmotronRestController {
     public @ResponseBody ResponseEntity<List<Sarcasm>> getSarcasms(
             @RequestParam(value = "page", defaultValue = "0") final Integer page,
             @RequestParam(value = "size", defaultValue = "50") final Integer size) {
+        LOGGER.debug("Entering getSarcasms...");
         final PageRequest pageRequest = new PageRequest(page, size,
                 new Sort(new Sort.Order(Sort.Direction.DESC, "timestamp")));
         final Page<Sarcasm> sarcasmPage = mongoDBSarcasmRepository.findAll(pageRequest);

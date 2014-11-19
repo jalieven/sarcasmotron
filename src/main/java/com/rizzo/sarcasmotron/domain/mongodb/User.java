@@ -83,11 +83,6 @@ public class User {
 
     public User setEmail(String email) {
         this.email = email;
-        try {
-            this.gravatar = md5Hex(email);
-        } catch (NoSuchAlgorithmException | UnsupportedEncodingException e) {
-            LOGGER.error("Failed while calculating gravatar", e);
-        }
         return this;
     }
 
@@ -100,7 +95,7 @@ public class User {
         return this;
     }
 
-    public String hex(byte[] array) {
+    public static String hex(byte[] array) {
         StringBuilder sb = new StringBuilder();
         for (byte anArray : array) {
             sb.append(Integer.toHexString((anArray
@@ -108,7 +103,7 @@ public class User {
         }
         return sb.toString();
     }
-    public String md5Hex(String message) throws NoSuchAlgorithmException, UnsupportedEncodingException {
+    public static String md5Hex(String message) throws NoSuchAlgorithmException, UnsupportedEncodingException {
         MessageDigest md = MessageDigest.getInstance("MD5");
         return hex(md.digest(message.getBytes("CP1252")));
     }

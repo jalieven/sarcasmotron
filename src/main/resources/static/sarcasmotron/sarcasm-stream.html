@@ -162,9 +162,6 @@
         Polymer({
             ready: function() {
                 var that = this;
-                if(this.show == 'favorites') {
-                    setTimeout(function(){}, 500);
-                }
                 this.stream.fetch({
                     success: function (collection, response, options) {
                         that.sarcasms = collection.toJSON();
