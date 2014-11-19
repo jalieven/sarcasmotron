@@ -42,7 +42,6 @@ public class ESSarcasm implements Serializable {
     @Field(type = FieldType.Nested)
     private List<ESComment> comments;
 
-    @Field(type = FieldType.Auto, store=true)
     private Set<String> favorites;
 
     public String getId() {

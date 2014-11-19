@@ -93,8 +93,12 @@
                             <td>Hot sarcasms</td>
                         </tr>
                         <tr>
-                            <td>user.nickName:tom</td>
+                            <td>user.nickName:tvgulck</td>
                             <td>Tom's sarcasms</td>
+                        </tr>
+                        <tr>
+                            <td>favorites:tvgulck</td>
+                            <td>Tom's favorite sarcasms</td>
                         </tr>
                         <tr>
                             <td>quote:"sarcasm offended"~3</td>
@@ -109,7 +113,7 @@
                             <td>Sarcasms "jalie" hasn't voted on</td>
                         </tr>
                         <tr>
-                            <td>_exists_:votes.tom</td>
+                            <td>_exists_:votes.tvgulck</td>
                             <td>Sarcasms "tom" has voted on</td>
                         </tr>
                     </tbody>
@@ -158,6 +162,9 @@
         Polymer({
             ready: function() {
                 var that = this;
+                if(this.show == 'favorites') {
+                    setTimeout(function(){}, 500);
+                }
                 this.stream.fetch({
                     success: function (collection, response, options) {
                         that.sarcasms = collection.toJSON();

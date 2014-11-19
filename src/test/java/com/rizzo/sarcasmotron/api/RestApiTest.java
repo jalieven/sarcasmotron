@@ -56,7 +56,7 @@ import static org.junit.Assert.assertTrue;
 public class RestApiTest {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(RestApiTest.class);
-    private static final String SSO_TOKEN = "AQIC5wM2LY4SfczW-rXozvlAYkc3XGAM1EUD728f45dS6WQ.*AAJTSQACMDIAAlNLABQtMTAyMDY5MTkyODczNjI1OTA2NQACUzEAAjAx*";
+    private static final String SSO_TOKEN = "AQIC5wM2LY4SfcxgeeWD4cPXR-zdYru-LezJJ9oj9x_Q5o4.*AAJTSQACMDIAAlNLABM0Mzk3MDUwODk0MjgwMzAyOTkzAAJTMQACMDE.*";
 
     @Value("${local.server.port}")
     private int port = 0;
@@ -93,12 +93,12 @@ public class RestApiTest {
 
     }
 
-    @After
-    public void tearDown() {
-        mongoDBSarcasmRepository.deleteAll();
-        mongoDBUserRepository.deleteAll();
-        mongoDBStatsRepository.deleteAll();
-    }
+//    @After
+//    public void tearDown() {
+//        mongoDBSarcasmRepository.deleteAll();
+//        mongoDBUserRepository.deleteAll();
+//        mongoDBStatsRepository.deleteAll();
+//    }
 
     @Test
     public void testHome() throws Exception {
