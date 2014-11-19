@@ -19,6 +19,7 @@ import com.rizzo.sarcasmotron.mongodb.MongoDBUserRepository;
 import org.elasticsearch.common.joda.time.Days;
 import org.hamcrest.Matchers;
 import org.joda.time.DateTime;
+import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -88,12 +89,12 @@ public class RestApiTest {
 
     }
 
-//    @After
-//    public void tearDown() {
-//        mongoDBSarcasmRepository.deleteAll();
-//        mongoDBUserRepository.deleteAll();
-//        mongoDBStatsRepository.deleteAll();
-//    }
+    @After
+    public void tearDown() {
+        mongoDBSarcasmRepository.deleteAll();
+        mongoDBUserRepository.deleteAll();
+        mongoDBStatsRepository.deleteAll();
+    }
 
     @Test
     public void testHome() throws Exception {

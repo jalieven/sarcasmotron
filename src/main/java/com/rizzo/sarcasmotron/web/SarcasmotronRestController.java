@@ -140,7 +140,7 @@ public class SarcasmotronRestController {
         final String nickname = getCurrentUserNickname();
         final ResponseEntity<Vote> responseEntity;
         // users can't vote for their own sarcasm!
-        if (!nickname.equals(sarcasm.getUser())) {
+        if (!nickname.equals(sarcasm.getUser().getNickName())) {
             final boolean voteCast = sarcasm.upVote(nickname);
             mongoDBSarcasmRepository.save(sarcasm);
             if (voteCast) {
