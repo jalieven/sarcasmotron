@@ -1,6 +1,5 @@
 package com.rizzo.sarcasmotron.domain.elasticsearch;
 
-import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import org.apache.commons.lang.builder.ToStringBuilder;
@@ -27,7 +26,8 @@ public class ESSarcasm implements Serializable {
 
     private String timestamp;
 
-    private String user;
+    @Field(type = FieldType.Nested)
+    private ESUser user;
 
     private String creator;
 
@@ -39,7 +39,7 @@ public class ESSarcasm implements Serializable {
     private Map<String, Integer> votes;
 
     @Field(type = FieldType.Nested)
-    private List<ESComment> ESComments;
+    private List<ESComment> comments;
 
     public String getId() {
         return this.id;
@@ -69,11 +69,11 @@ public class ESSarcasm implements Serializable {
         return this;
     }
 
-    public String getUser() {
+    public ESUser getUser() {
         return this.user;
     }
 
-    public ESSarcasm setUser(String user) {
+    public ESSarcasm setUser(ESUser user) {
         this.user = user;
         return this;
     }
@@ -145,14 +145,14 @@ public class ESSarcasm implements Serializable {
     }
 
     public List<ESComment> getComments() {
-        if(this.ESComments == null) {
-            this.ESComments = Lists.newArrayList();
+        if(this.comments == null) {
+            this.comments = Lists.newArrayList();
         }
-        return this.ESComments;
+        return this.comments;
     }
 
-    public ESSarcasm setComments(List<ESComment> ESComments) {
-        this.ESComments = ESComments;
+    public ESSarcasm setComments(List<ESComment> comments) {
+        this.comments = comments;
         return this;
     }
 
@@ -171,7 +171,7 @@ public class ESSarcasm implements Serializable {
                 .append("quote", quote)
                 .append("context", context)
                 .append("votes", votes)
-                .append("ESComments", ESComments)
+                .append("comments", comments)
                 .toString();
     }
 }

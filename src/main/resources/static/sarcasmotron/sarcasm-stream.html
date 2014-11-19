@@ -1,8 +1,12 @@
 <link rel="import" href="../components/polymer/polymer.html">
 <link rel="import" href="../components/core-a11y-keys/core-a11y-keys.html">
 <link rel="import" href="../components/core-signals/core-signals.html">
+<link rel="import" href="../components/core-icons/core-icons.html">
+<link rel="import" href="../components/core-transition/core-transition.html">
 <link rel="import" href="../components/paper-toast/paper-toast.html">
 <link rel="import" href="../components/paper-fab/paper-fab.html">
+<link rel="import" href="../components/paper-dialog/paper-dialog-transition.html">
+<link rel="import" href="../components/paper-dialog/paper-dialog.html">
 <link rel="import" href="../components/paper-icon-button/paper-icon-button.html">
 <link rel="import" href="sarcasm-card.html">
 
@@ -27,6 +31,11 @@
             }
             paper-fab.green {
                 background: #259b24;
+                margin-right: 5px;
+            }
+            paper-fab.blue {
+                background: #216c89;
+                margin-left: 5px;
             }
         </style>
 
@@ -39,15 +48,62 @@
             <core-signals on-core-signal-sarcasm-favorited="{{handleSarcasmFavorited}}"></core-signals>
             <core-signals on-core-signal-stream-changed="{{handleStreamChanged}}"></core-signals>
 
+            <paper-dialog id="filterInfoDialog" heading="Filter Query Information" transition="core-transition-center" backdrop>
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Filter query</th>
+                            <th>Human readable</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td>*</td>
+                            <td>All sarcasms</td>
+                        </tr>
+                        <tr>
+                            <td>"aap noot"</td>
+                            <td>Any field containing "app noot"</td>
+                        </tr>
+                        <tr>
+                            <td>timestamp:[2014-11-12 TO 2014-11-13]</td>
+                            <td>Time range</td>
+                        </tr>
+                        <tr>
+                            <td>user:tom</td>
+                            <td>Tom's sarcasms</td>
+                        </tr>
+                        <tr>
+                            <td>quote:"sarcasm offended"~3</td>
+                            <td>Quotes with "sarcasm" and "offended" in proximity</td>
+                        </tr>
+                        <tr>
+                            <td>context:"necesary"~3</td>
+                            <td>If you have difficulty with spelling</td>
+                        </tr>
+                        <tr>
+                            <td>_missing_:votes.jalie</td>
+                            <td>Sarcasms "jalie" hasn't voted on</td>
+                        </tr>
+                        <tr>
+                            <td>_exists_:votes.tom</td>
+                            <td>Sarcasms "tom" has voted on</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </paper-dialog>
+
             <paper-toast id="favoriteToast" text="Favorite updated!"></paper-toast>
             <paper-toast id="upvoteToast" text="Upvote cast successfully"></paper-toast>
             <paper-toast id="downvoteToast" text="Downvote cast successfully"></paper-toast>
 
-            <div id="filter" layout horizontal>
-                <paper-input label="Filter query" value="{{query}}"></paper-input>
+            <div id="filter" layout horizontal hidden?="{{show == 'favorites'}}">
+                <paper-input label="Filter query" value="{{query}}" floatingLabel></paper-input>
                 <div flex></div>
-                <paper-fab class="green" id="filter-btn" icon="filter-list"
+                <paper-fab class="green" id="filter-btn" icon="filter"
                                    on-click="{{handleFilter}}"></paper-fab>
+                <paper-fab class="blue" id="info-btn" icon="info"
+                       on-click="{{handleInfo}}"></paper-fab>
                 <paper-shadow z="1"></paper-shadow>
             </div>
 
@@ -61,9 +117,9 @@
                               on-vote-down="{{handleVoteDown}}"
                               on-comment="{{handleComment}}"
                               hidden?="{{show == 'favorites' && !sarcasm.favorite}}">
-                    <img src="{{sarcasm.avatar}}" width="70" height="70">
-                    <h2>{{sarcasm.user}}</h2>
-                    <h4>Votes: {{sarcasm.voteTotal}}</h4>
+                    <img src="http://www.gravatar.com/avatar/{{sarcasm.user.gravatar}}?s=70" width="70" height="70">
+                    <h2>{{sarcasm.user.nickName}}</h2>
+                    <h4>VoteTotal: {{sarcasm.voteTotal}}</h4>
                     <p class="context"><b>{{sarcasm.timestamp | toHumanReadable}}</b></p>
                     <p>{{sarcasm.quote}}</p>
                     <p class="context" align="right"><i>{{sarcasm.context}}</i></p>
@@ -99,8 +155,8 @@
                 var favoriteModel = this.stream.get(sarcasm.id);
                 favoriteModel.favorite({
                     success: function (model, response, options) {
-                        toast.show();
                         that.fire('core-signal', {name: "sarcasm-favorited", data: (that.show == 'favorites')});
+                        toast.show();
                     },
                     error: function (model, response, options) {
                         toast.text = "Error while updating favorite!";
@@ -199,6 +255,10 @@
                     dataType: "json"};
 
                 this.stream.fetch(opts);
+            },
+            handleInfo: function(event, detail, sender){
+                var infoDialog = this.$.filterInfoDialog;
+                infoDialog.toggle();
             },
             keyHandler: function(event, detail, sender) {
                 switch (detail.key) {

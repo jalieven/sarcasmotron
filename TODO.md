@@ -5,15 +5,8 @@
 - Add tovote functionality/filtering to CLI
 - Add avatar to user and return it along
 - Make error logging in browser console uniform
-
-
- <!--<core-tooltip label="Statistics" position="bottom" class="fancy">-->
-                        <!--<paper-icon-button id="stats-btn" route="stats" icon="drive-chart"-->
-                                           <!--on-click="{{changeSection}}"></paper-icon-button>-->
-                    <!--</core-tooltip>-->
-                    <!--<core-tooltip label="Who's trending" position="bottom" class="fancy">-->
-                        <!--<paper-icon-button id="trend-btn" route="trend" icon="trending-up"-->
-                                           <!--on-click="{{changeSection}}"></paper-icon-button>-->
-                    <!--</core-tooltip>-->
+- Scroll down in stream fetches new pages
                     
                                             
+- Rewrite into angular (Polymer is fun but not production ready)
+- Infinite scroll on stream (pagination without skip) with percentage bubble

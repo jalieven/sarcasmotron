@@ -49,7 +49,7 @@ public class VoteCalculator {
         DateTime past = now.minus(baseLinePeriod);
         final SearchResponse baseLine = client.prepareSearch(ES_INDEX)
                 .setTypes(ES_TYPE)
-                .setQuery(QueryBuilders.queryString("user: " + user))
+                .setQuery(QueryBuilders.nestedQuery("user", QueryBuilders.queryString("user.nickName:" + user)))
                 .addAggregation(
                         AggregationBuilders.dateHistogram("histogramAggVotes")
                                 .extendedBounds(past, now)
@@ -91,8 +91,9 @@ public class VoteCalculator {
         return rollingZScores;
     }
 
+    // TODO rework this to use the user collection (which is distinct)
     public List<String> getDistinctUsers() {
-        return mongoTemplate.getCollection(MONGO_COLLECTION).distinct("user");
+        return mongoTemplate.getCollection(MONGO_COLLECTION).distinct("user.nickName");
     }
 
     public VoteStats calculateVoteStatsForUser(String user, ReadablePeriod period) {
@@ -101,7 +102,7 @@ public class VoteCalculator {
         final SearchResponse stats = client.prepareSearch(ES_INDEX)
                 .setTypes(ES_TYPE)
                 .setQuery(QueryBuilders.filteredQuery(
-                        QueryBuilders.queryString("user: " + user),
+                        QueryBuilders.nestedQuery("user", QueryBuilders.queryString("user.nickName: " + user)),
                         FilterBuilders.boolFilter().must(FilterBuilders.rangeFilter("timestamp").from(past).to(now))))
                 .addAggregation(
                         AggregationBuilders.stats("voteStats")

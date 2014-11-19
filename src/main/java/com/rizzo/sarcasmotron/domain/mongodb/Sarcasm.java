@@ -28,7 +28,7 @@ public class Sarcasm implements Serializable {
 
     private String timestamp;
 
-    private String user;
+    private User user;
 
     @JsonIgnore
     private String creator;
@@ -89,11 +89,11 @@ public class Sarcasm implements Serializable {
         return this;
     }
 
-    public String getUser() {
+    public User getUser() {
         return this.user;
     }
 
-    public Sarcasm setUser(String user) {
+    public Sarcasm setUser(User user) {
         this.user = user;
         return this;
     }

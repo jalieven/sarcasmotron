@@ -103,10 +103,12 @@
                 };
             },
             submit: function(event, detail, sender) {
-                login(this.username, this.password, '/');
-                this.$.error.model = {
-                    loginError: 'Nice try, you failed the login!'
-                };
+                var fail = login(this.username, this.password, '/');
+                if(fail) {
+                    this.$.error.model = {
+                        loginError: 'Nice try, you failed the login!'
+                    };
+                }
             },
             keyHandler: function(event, detail, sender) {
                 switch (detail.key) {

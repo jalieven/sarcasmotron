@@ -1,15 +1,24 @@
 package com.rizzo.sarcasmotron.domain.mongodb;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import org.apache.commons.lang.builder.ToStringBuilder;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.data.annotation.Id;
 
+import java.io.UnsupportedEncodingException;
+import java.security.MessageDigest;
+import java.security.NoSuchAlgorithmException;
 import java.util.Date;
 
 public class User {
 
-    @Id
-    private String id;
+    private static final Logger LOGGER = LoggerFactory.getLogger(User.class);
 
+    @Id
+    private String email;
+
+    @JsonIgnore
     private Date lastLogin;
 
     private String nickName;
@@ -18,18 +27,7 @@ public class User {
 
     private String surName;
 
-    private String email;
-
-    private String avatar;
-
-    public String getId() {
-        return id;
-    }
-
-    public User setId(String id) {
-        this.id = id;
-        return this;
-    }
+    private String gravatar;
 
     public Date getLastLogin() {
         return lastLogin;
@@ -73,27 +71,45 @@ public class User {
 
     public User setEmail(String email) {
         this.email = email;
+        try {
+            this.gravatar = md5Hex(email);
+        } catch (NoSuchAlgorithmException | UnsupportedEncodingException e) {
+            LOGGER.error("Failed while calculating gravatar", e);
+        }
         return this;
     }
 
-    public String getAvatar() {
-        return avatar;
+    public String getGravatar() {
+        return gravatar;
     }
 
-    public void setAvatar(String avatar) {
-        this.avatar = avatar;
+    public User setGravatar(String gravatar) {
+        this.gravatar = gravatar;
+        return this;
+    }
+
+    public String hex(byte[] array) {
+        StringBuilder sb = new StringBuilder();
+        for (byte anArray : array) {
+            sb.append(Integer.toHexString((anArray
+                    & 0xFF) | 0x100).substring(1, 3));
+        }
+        return sb.toString();
+    }
+    public String md5Hex(String message) throws NoSuchAlgorithmException, UnsupportedEncodingException {
+        MessageDigest md = MessageDigest.getInstance("MD5");
+        return hex(md.digest(message.getBytes("CP1252")));
     }
 
     @Override
     public String toString() {
         return new ToStringBuilder(this)
-                .append("id", id)
                 .append("lastLogin", lastLogin)
                 .append("nickName", nickName)
                 .append("givenName", givenName)
                 .append("surName", surName)
                 .append("email", email)
-                .append("avatar", avatar)
+                .append("gravatar", gravatar)
                 .toString();
     }
 }

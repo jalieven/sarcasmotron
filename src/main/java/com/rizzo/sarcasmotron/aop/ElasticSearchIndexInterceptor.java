@@ -4,8 +4,10 @@ import com.google.common.collect.Iterables;
 import com.google.common.collect.Lists;
 import com.rizzo.sarcasmotron.domain.elasticsearch.ESComment;
 import com.rizzo.sarcasmotron.domain.elasticsearch.ESSarcasm;
+import com.rizzo.sarcasmotron.domain.elasticsearch.ESUser;
 import com.rizzo.sarcasmotron.domain.mongodb.Comment;
 import com.rizzo.sarcasmotron.domain.mongodb.Sarcasm;
+import com.rizzo.sarcasmotron.domain.mongodb.User;
 import com.rizzo.sarcasmotron.elasticsearch.ElasticsearchSarcasmRepository;
 import org.aopalliance.intercept.MethodInterceptor;
 import org.aopalliance.intercept.MethodInvocation;
@@ -68,11 +70,19 @@ public class ElasticSearchIndexInterceptor implements MethodInterceptor {
     private ESSarcasm mapSarcasm(Sarcasm mongoSarcasm) {
         return new ESSarcasm()
                 .setId(mongoSarcasm.getId()).setQuote(mongoSarcasm.getQuote())
-                .setContext(mongoSarcasm.getContext()).setUser(mongoSarcasm.getUser())
+                .setContext(mongoSarcasm.getContext()).setUser(mapUser(mongoSarcasm.getUser()))
                 .setCreator(mongoSarcasm.getCreator())
                 .setVotes(mongoSarcasm.getVotes())
                 .setComments(mapComments(mongoSarcasm.getComments()))
                 .setTimestamp(mongoSarcasm.getTimestamp());
+    }
+
+    private ESUser mapUser(User user) {
+        return new ESUser().setEmail(user.getEmail())
+                .setNickName(user.getNickName())
+                .setGivenName(user.getGivenName())
+                .setSurName(user.getSurName())
+                .setGravatar(user.getGravatar());
     }
 
     private List<ESComment> mapComments(List<Comment> mongoSarcasmComments) {

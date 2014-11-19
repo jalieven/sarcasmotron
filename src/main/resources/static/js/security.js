@@ -26,6 +26,7 @@ var hasCookieAndValid = function(){
 
 var login = function(username, password, location) {
     var redirect = location || "/";
+    var fail = false;
     $.ajax({url: ssoUrl + "/authenticate?username=" + username + "&password=" + password,
         success: function (result, status, xhr) {
             if (xhr.status == 200) {
@@ -34,13 +35,16 @@ var login = function(username, password, location) {
                 document.location = redirect;
             } else {
                 console.log("Authenticate result: " + result);
+                fail = true;
             }
         },
         error: function(xhr, status, error) {
             console.log("Authenticate result: " + error);
+            fail = true;
         },
         async: false
     });
+    return fail;
 };
 
 var validateSecurity = function(){

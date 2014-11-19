@@ -10,4 +10,6 @@ public interface MongoDBUserRepository extends MongoRepository<User, String> {
 
     User findOneByNickName(@Param("nickName") String user);
 
+    User findOneByEmail(@Param("email") String email);
+
 }

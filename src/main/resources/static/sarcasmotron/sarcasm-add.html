@@ -1,5 +1,6 @@
 <link rel="import" href="../components/polymer/polymer.html">
 <link rel="import" href="../components/core-dropdown/core-dropdown.html">
+<link rel="import" href="../components/paper-icon-button/paper-icon-button.html">
 <link rel="import" href="../components/paper-input/paper-input.html">
 <link rel="import" href="../components/paper-toast/paper-toast.html">
 <link rel="import" href="../components/paper-fab/paper-fab.html">
@@ -40,6 +41,23 @@
 
         </style>
 
+        <polymer-element name="x-trigger" extends="paper-icon-button" relative on-tap="{{toggle}}" noink>
+            <template>
+                <shadow></shadow>
+                <content></content>
+            </template>
+            <script>
+                Polymer({
+                    toggle: function() {
+                        if (!this.dropdown) {
+                            this.dropdown = this.querySelector('paper-dropdown');
+                        }
+                        this.dropdown && this.dropdown.toggle();
+                    }
+                });
+            </script>
+        </polymer-element>
+
         <paper-shadow z="1">
 
             <paper-toast id="addedToast" text="Sarcasm added!"></paper-toast>
@@ -50,7 +68,20 @@
                     <div flex></div>
                     <paper-fab icon="add" class="green" on-tap="{{handleAdd}}"></paper-fab>
                 </div>
-                <paper-input multiline label="User" value="{{user}}" floatingLabel></paper-input>
+
+                <template is="auto-binding">
+                    <div relative>
+                        <core-icon-button id="userBtn" icon="account-box"></core-icon-button>
+                        <core-dropdown relatedTarget="{{$.userBtn}}">
+                            <core-menu>
+                                <template repeat="{{user in users}}">
+                                    <core-item on-tap="handleUserSelect">{{user.nickName}} ({{user.givenName}} {{user.surName}})</core-item>
+                                </template>
+                            </core-menu>
+                        </core-dropdown>
+                    </div>
+                </template>
+
                 <p class="context"><b>right about now</b></p>
                 <paper-input multiline label="Quote" value="{{quote}}" floatingLabel></paper-input>
                 <i><paper-input multiline label="Context" value="{{context}}" floatingLabel></paper-input></i>
@@ -62,6 +93,38 @@
 
     <script>
         Polymer({
+            created: function() {
+                var that = this;
+                var originalSync = Backbone.sync;
+                Backbone.sync = function (method, model, options) {
+                    options.headers = options.headers || {};
+                    _.extend(options.headers, { "openamssoid": getSSOToken()});
+                    originalSync.call(model, method, model, options);
+                };
+
+                var UserModel = Backbone.Model.extend({
+                    urlRoot: '/user'
+                });
+                var UserCollection = Backbone.Collection.extend({
+                    model: UserModel,
+                    url: '/user'
+                });
+                this.userCollection = new UserCollection();
+                var opts = {
+                    success: function (collection, response, options) {
+                        that.users = collection.toJSON();
+                        console.log("Success while fetching users: " + response);
+                    },
+                    error: function(collection, response, options) {
+                        console.log("Error while fetching users: " + response);
+                    },
+                    dataType: "json"};
+                this.userCollection.fetch(opts);
+            },
+            handleUserSelect: function(event, detail, sender) {
+                var selectedUser = sender.templateInstance.model.user;
+                this.user = selectedUser.nickName;
+            },
             handleAdd: function(event, detail, sender) {
                 this.fire('core-signal',
                         {name: "sarcasm-added", data:
