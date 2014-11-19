@@ -125,7 +125,7 @@
             <paper-toast id="downvoteToast" text="Downvote cast successfully"></paper-toast>
 
             <div id="filter" layout horizontal hidden?="{{show == 'favorites'}}">
-                <paper-input label="Filter query" value="{{query}}"></paper-input>
+                <paper-input id="query" label="Filter query" value="{{query}}"></paper-input>
                 <div flex></div>
                 <paper-fab class="green" id="filter-btn" icon="filter"
                                    on-click="{{handleFilter}}"></paper-fab>
@@ -257,7 +257,7 @@
             },
             handleFilter: function(event, detail, sender) {
                 var that = this;
-                var query = {'query': this.query};
+                var query = {'query': this.$.query.inputValue};
                 var opts = {
                     url: '/sarcasm/search',
                     success: function (collection, response, options) {

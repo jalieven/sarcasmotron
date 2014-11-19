@@ -73,8 +73,8 @@
                 <div class="error-messages" layout vertical center><b>{{loginError}}</b></div>
             </template>
             <div class="login-form" layout vertical center>
-                <paper-input value="{{username}}" label="Username" floatingLabel></paper-input>
-                <paper-input value="{{password}}" label="Password" type="password" floatingLabel></paper-input>
+                <paper-input id="username" value="{{username}}" label="Username" floatingLabel></paper-input>
+                <paper-input id="password" value="{{password}}" label="Password" type="password" floatingLabel></paper-input>
             </div>
             <div class="login-btns" layout horizontal end-justified>
                 <div style="padding-right: 15px">
@@ -103,7 +103,7 @@
                 };
             },
             submit: function(event, detail, sender) {
-                var fail = login(this.username, this.password, '/');
+                var fail = login(this.$.username.inputValue, this.$.password.inputValue, '/');
                 if(fail) {
                     this.$.error.model = {
                         loginError: 'Nice try, you failed the login!'
