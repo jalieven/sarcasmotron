@@ -11,6 +11,7 @@
 
     <sec:http entry-point-ref="openam.statelessEntryPoint" use-expressions="true">
         <sec:intercept-url pattern="/" access="permitAll()" />
+        <sec:intercept-url pattern="/background" access="permitAll()" />
         <sec:intercept-url pattern="/favicon.ico" access="permitAll()" />
         <sec:intercept-url pattern="/user/**" access="permitAll()" />
         <sec:intercept-url pattern="/api/posts.json" access="permitAll()" />

@@ -14,6 +14,7 @@ import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 @Document(indexName = "sarcasmotron", type = "sarcasms", shards = 1, replicas = 0, refreshInterval = "-1")
 public class ESSarcasm implements Serializable {
@@ -40,6 +41,9 @@ public class ESSarcasm implements Serializable {
 
     @Field(type = FieldType.Nested)
     private List<ESComment> comments;
+
+    @Field(type = FieldType.Auto, store=true)
+    private Set<String> favorites;
 
     public String getId() {
         return this.id;
@@ -161,6 +165,16 @@ public class ESSarcasm implements Serializable {
         return this;
     }
 
+    public Set<String> getFavorites() {
+        return favorites;
+    }
+
+    public ESSarcasm setFavorites(Set<String> favorites) {
+        this.favorites = favorites;
+        return this;
+    }
+
+
     @Override
     public String toString() {
         return new ToStringBuilder(this)
@@ -172,6 +186,7 @@ public class ESSarcasm implements Serializable {
                 .append("context", context)
                 .append("votes", votes)
                 .append("comments", comments)
+                .append("favorites", favorites)
                 .toString();
     }
 }

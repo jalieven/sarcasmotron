@@ -13,13 +13,16 @@ import com.rizzo.sarcasmotron.domain.web.*;
 import com.rizzo.sarcasmotron.elasticsearch.ElasticsearchSarcasmRepository;
 import com.rizzo.sarcasmotron.mongodb.MongoDBSarcasmRepository;
 import com.rizzo.sarcasmotron.mongodb.MongoDBUserRepository;
+import net.logstash.logback.encoder.org.apache.commons.io.IOUtils;
 import org.elasticsearch.index.query.NestedQueryBuilder;
 import org.elasticsearch.index.query.QueryStringQueryBuilder;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.core.io.ClassPathResource;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Sort;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContext;
@@ -27,8 +30,11 @@ import org.springframework.security.core.context.SecurityContextHolderStrategy;
 import org.springframework.web.bind.annotation.*;
 
 import javax.validation.Valid;
+import java.io.IOException;
+import java.io.InputStream;
 import java.text.ParseException;
 import java.util.List;
+import java.util.Random;
 
 @RestController
 public class SarcasmotronRestController {
@@ -295,6 +301,14 @@ public class SarcasmotronRestController {
         return new ResponseEntity<>(sarcasms, HttpStatus.OK);
     }
 
+    @RequestMapping(value= "/background", method = RequestMethod.GET, produces = MediaType.IMAGE_JPEG_VALUE)
+    public @ResponseBody byte[] testphoto() throws IOException {
+        Integer random = new Random().nextInt(10);
+        String randomImg = "static/images/futurama-bender-0" + random + ".jpg";
+        ClassPathResource img = new ClassPathResource(randomImg);
+        return IOUtils.toByteArray(img.getInputStream());
+    }
+
     private String getCurrentUserNickname() {
         final SecurityContext securityContext = this.securityContextHolderStrategy.getContext();
         final Authentication authentication = securityContext.getAuthentication();
@@ -316,7 +330,8 @@ public class SarcasmotronRestController {
                 .setContext(esSarcasm.getContext()).setUser(mapUser(esSarcasm.getUser()))
                 .setCreator(esSarcasm.getCreator())
                 .setVotes(esSarcasm.getVotes())
-                .setTimestamp(esSarcasm.getTimestamp());
+                .setTimestamp(esSarcasm.getTimestamp())
+                .setFavorites(esSarcasm.getFavorites());
         sarcasm.checkState(getCurrentUserNickname());
         return sarcasm;
     }

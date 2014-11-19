@@ -4,6 +4,7 @@
 <link rel="import" href="../components/core-transition/core-transition.html">
 <link rel="import" href="../components/core-tooltip/core-tooltip.html">
 <link rel="import" href="../components/paper-toast/paper-toast.html">
+<link rel="import" href="../components/paper-button/paper-button.html">
 <link rel="import" href="../components/paper-fab/paper-fab.html">
 <link rel="import" href="../components/paper-dialog/paper-dialog-transition.html">
 <link rel="import" href="../components/paper-dialog/paper-dialog.html">
@@ -32,9 +33,10 @@
             paper-fab.green {
                 background: #259b24;
                 margin-right: 5px;
+                margin-left: 10px;
             }
             paper-fab.blue {
-                background: #216c89;
+                background: #343334;
                 margin-left: 5px;
             }
         </style>
@@ -119,7 +121,7 @@
             <paper-toast id="downvoteToast" text="Downvote cast successfully"></paper-toast>
 
             <div id="filter" layout horizontal hidden?="{{show == 'favorites'}}">
-                <paper-input label="Filter query" value="{{query}}" floatingLabel></paper-input>
+                <paper-input label="Filter query" value="{{query}}"></paper-input>
                 <div flex></div>
                 <paper-fab class="green" id="filter-btn" icon="filter"
                                    on-click="{{handleFilter}}"></paper-fab>
@@ -159,10 +161,6 @@
                 this.stream.fetch({
                     success: function (collection, response, options) {
                         that.sarcasms = collection.toJSON();
-                        for (var i = 0; i < that.sarcasms.length; i++) {
-                            var sarcasm = that.sarcasms[i];
-                            sarcasm.avatar = '../images/avatar-01.svg';
-                        }
                     },
                     error: function(collection, response, options) {
                         console.log("Error while fetching sarcasms: " + response);
@@ -239,10 +237,6 @@
                         success: function (collection, response, options) {
                             that.stream = collection;
                             that.sarcasms = collection.toJSON();
-                            for (var i = 0; i < that.sarcasms.length; i++) {
-                                var sarcasm = that.sarcasms[i];
-                                sarcasm.avatar = '../images/avatar-01.svg';
-                            }
                         },
                         error: function (collection, response, options) {
                             console.log("Error while fetching sarcasms: " + response);
@@ -253,10 +247,6 @@
             handleStreamChanged: function(event, detail, sender) {
                 this.stream.sort();
                 this.sarcasms = this.stream.toJSON();
-                for (var i = 0; i < this.sarcasms.length; i++) {
-                    var sarcasm = this.sarcasms[i];
-                    sarcasm.avatar = '../images/avatar-01.svg';
-                }
             },
             handleFilter: function(event, detail, sender) {
                 var that = this;

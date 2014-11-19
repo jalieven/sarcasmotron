@@ -74,6 +74,7 @@ public class ElasticSearchIndexInterceptor implements MethodInterceptor {
                 .setCreator(mongoSarcasm.getCreator())
                 .setVotes(mongoSarcasm.getVotes())
                 .setComments(mapComments(mongoSarcasm.getComments()))
+                .setFavorites(mongoSarcasm.getFavorites())
                 .setTimestamp(mongoSarcasm.getTimestamp());
     }
 
