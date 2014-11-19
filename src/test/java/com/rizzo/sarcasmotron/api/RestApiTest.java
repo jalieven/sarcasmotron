@@ -1,6 +1,7 @@
 package com.rizzo.sarcasmotron.api;
 
 import com.google.common.collect.Iterables;
+import com.google.common.collect.Lists;
 import com.jayway.restassured.RestAssured;
 import com.jayway.restassured.http.ContentType;
 import com.jayway.restassured.path.json.config.JsonPathConfig;
@@ -10,6 +11,7 @@ import com.rizzo.sarcasmotron.domain.calc.VoteStats;
 import com.rizzo.sarcasmotron.domain.mongodb.Comment;
 import com.rizzo.sarcasmotron.domain.mongodb.Sarcasm;
 import com.rizzo.sarcasmotron.domain.mongodb.User;
+import com.rizzo.sarcasmotron.domain.web.Stats;
 import com.rizzo.sarcasmotron.domain.web.StatsRequest;
 import com.rizzo.sarcasmotron.domain.web.TrendRequest;
 import com.rizzo.sarcasmotron.elasticsearch.ElasticsearchSarcasmRepository;
@@ -38,11 +40,13 @@ import org.springframework.test.context.web.WebAppConfiguration;
 import java.math.BigDecimal;
 import java.util.Date;
 import java.util.List;
+import java.util.Map;
 
 import static com.jayway.restassured.RestAssured.given;
 import static com.jayway.restassured.config.JsonConfig.jsonConfig;
 import static com.jayway.restassured.config.RestAssuredConfig.newConfig;
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
 
 @RunWith(SpringJUnit4ClassRunner.class)
@@ -603,6 +607,42 @@ public class RestApiTest {
                 .stamp(timestamp)
                 .setCreator(creator)
                 .setUser(new User().setNickName(user).setEmail(user + "@milieuinfo.be").setGivenName(user).setSurName(user));
+    }
+
+    @Test
+    public void testVoteStats() {
+        VoteStats voteStats0 = new VoteStats();
+        voteStats0.setCount(1L);
+        voteStats0.setMax(1D);
+        voteStats0.setMin(0D);
+        voteStats0.setSum(1D);
+
+        VoteStats voteStats1 = new VoteStats();
+        voteStats1.setCount(5L);
+        voteStats1.setMax(4D);
+        voteStats1.setMin(0D);
+        voteStats1.setSum(10D);
+
+        VoteStats voteStats2 = new VoteStats();
+        voteStats2.setCount(5L);
+        voteStats2.setMax(5D);
+        voteStats2.setMin(0D);
+        voteStats2.setSum(10D);
+
+        Stats stats = new Stats();
+        stats.addVoteStats("joost", voteStats0);
+        stats.addVoteStats("jalie", voteStats1);
+        stats.addVoteStats("gert", voteStats2);
+
+        stats.sort();
+
+        final Map.Entry<String, VoteStats> first = Iterables.getFirst(stats.getVoteStats().entrySet(), null);
+        final Map.Entry<String, VoteStats> last = Iterables.getLast(stats.getVoteStats().entrySet(), null);
+        assertNotNull(first);
+        assertNotNull(last);
+        assertEquals("gert", first.getKey());
+        assertEquals("joost", last.getKey());
+
     }
 
 }

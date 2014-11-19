@@ -66,12 +66,20 @@ public class ScheduledTasks {
         stats.setValidity(validPeriod);
         mongoDBStatsRepository.save(stats);
 
+        boolean winner = true;
         for (Map.Entry<String, VoteStats> userVoteStats : stats.getVoteStats().entrySet()) {
             final User user = mongoDBUserRepository.findOneByNickName(userVoteStats.getKey());
             if (user != null) {
                 final VoteStats voteStats = userVoteStats.getValue();
                 final Context context = new Context();
-                context.setVariable("greeting", "Hello " + user.getGivenName() + " " + user.getSurName());
+                String greeting;
+                if (winner) {
+                    greeting = "Congratulations " + user.getGivenName() + " " + user.getSurName() + ", you have been voted the most sarcastic person of the week!";
+                    winner = false;
+                } else {
+                    greeting = "Hello " + user.getGivenName() + " " + user.getSurName();
+                }
+                context.setVariable("greeting", greeting);
                 context.setVariable("stats", voteStats);
                 context.setVariable("from", stats.getStart());
                 context.setVariable("until", stats.getEnd());

@@ -62,8 +62,8 @@
                 </sarcasmotron-user-selection>
 
                 <p class="context"><b>right about now</b></p>
-                <paper-input multiline label="Quote" value="{{quote}}" floatingLabel></paper-input>
-                <i><paper-input multiline label="Context" value="{{context}}" floatingLabel></paper-input></i>
+                <paper-input id="quoteInput" multiline label="Quote" value="{{quote}}" floatingLabel></paper-input>
+                <i><paper-input id="contextInput" multiline label="Context" value="{{context}}" floatingLabel></paper-input></i>
 
             </div>
         </paper-shadow>
@@ -120,6 +120,8 @@
                     };
                     this.fire('core-signal', {name: "sarcasm-added", data: data});
                     toast.text = "Sarcasm will be added!";
+                    this.$.quoteInput.inputValue = '';
+                    this.$.contextInput.inputValue = '';
                 }
                 toast.show();
             }
