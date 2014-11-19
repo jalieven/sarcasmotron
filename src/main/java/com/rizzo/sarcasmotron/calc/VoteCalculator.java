@@ -91,8 +91,7 @@ public class VoteCalculator {
         return rollingZScores;
     }
 
-    // TODO rework this to use the user collection (which is distinct)
-    public List<String> getDistinctUsers() {
+    public List<String> getDistinctSarcasticUsers() {
         return mongoTemplate.getCollection(MONGO_COLLECTION).distinct("user.nickName");
     }
 

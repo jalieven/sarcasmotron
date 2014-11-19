@@ -1,9 +1,10 @@
-<link rel="import" href="../components/polymer/polymer.html">
 <link rel="import" href="../components/core-dropdown/core-dropdown.html">
+<link rel="import" href="../components/core-signals/core-signals.html">
 <link rel="import" href="../components/paper-icon-button/paper-icon-button.html">
 <link rel="import" href="../components/paper-input/paper-input.html">
 <link rel="import" href="../components/paper-toast/paper-toast.html">
 <link rel="import" href="../components/paper-fab/paper-fab.html">
+<link rel="import" href="./sarcasmotron-user-select.html">
 
 <polymer-element name="sarcasm-add">
     <template>
@@ -41,26 +42,11 @@
 
         </style>
 
-        <polymer-element name="x-trigger" extends="paper-icon-button" relative on-tap="{{toggle}}" noink>
-            <template>
-                <shadow></shadow>
-                <content></content>
-            </template>
-            <script>
-                Polymer({
-                    toggle: function() {
-                        if (!this.dropdown) {
-                            this.dropdown = this.querySelector('paper-dropdown');
-                        }
-                        this.dropdown && this.dropdown.toggle();
-                    }
-                });
-            </script>
-        </polymer-element>
-
         <paper-shadow z="1">
 
             <paper-toast id="addedToast" text="Sarcasm added!"></paper-toast>
+
+            <core-signals on-core-signal-user-selected="{{handleUserSelect}}"></core-signals>
 
             <div id="new-sarcasm">
                 <div class="card-header" layout horizontal center>
@@ -69,18 +55,11 @@
                     <paper-fab icon="add" class="green" on-tap="{{handleAdd}}"></paper-fab>
                 </div>
 
-                <template is="auto-binding">
-                    <div relative>
-                        <core-icon-button id="userBtn" icon="account-box"></core-icon-button>
-                        <core-dropdown relatedTarget="{{$.userBtn}}">
-                            <core-menu>
-                                <template repeat="{{user in users}}">
-                                    <core-item on-tap="handleUserSelect">{{user.nickName}} ({{user.givenName}} {{user.surName}})</core-item>
-                                </template>
-                            </core-menu>
-                        </core-dropdown>
-                    </div>
-                </template>
+                <sarcasmotron-user-selection>
+                    <template repeat="{{user in users}}">
+                        <li id="{{user.id}}">{{user.nickName}} ({{user.givenName}} {{user.surName}})</li>
+                    </template>
+                </sarcasmotron-user-selection>
 
                 <p class="context"><b>right about now</b></p>
                 <paper-input multiline label="Quote" value="{{quote}}" floatingLabel></paper-input>
@@ -122,21 +101,26 @@
                 this.userCollection.fetch(opts);
             },
             handleUserSelect: function(event, detail, sender) {
-                var selectedUser = sender.templateInstance.model.user;
-                this.user = selectedUser.nickName;
+                this.user = detail;
             },
             handleAdd: function(event, detail, sender) {
-                this.fire('core-signal',
-                        {name: "sarcasm-added", data:
-                            {context: this.context,
-                                quote: this.quote,
-                                timestamp: moment().format("YYYY-MM-DDTHH:mm:ss.SSSZ"),
-                                user: this.user,
-                                avatar: '../images/avatar-01.svg'
-                            }
-                        }
-                );
                 var toast = this.$.addedToast;
+                var sarcasmUser = this.userCollection.get(this.user);
+                if (sarcasmUser === undefined) {
+                    toast.text = "Pleaz select a user!";
+                } else if(!this.quote) {
+                    toast.text = "Pleaz provide a quote!";
+                } else if(!this.context) {
+                    toast.text = "Pleaz provide a context!";
+                } else {
+                    var data = {context: this.context,
+                        quote: this.quote,
+                        timestamp: moment().format("YYYY-MM-DDTHH:mm:ss.SSSZ"),
+                        user: sarcasmUser.toJSON()
+                    };
+                    this.fire('core-signal', {name: "sarcasm-added", data: data});
+                    toast.text = "Sarcasm will be added!";
+                }
                 toast.show();
             }
         });

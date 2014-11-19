@@ -29,7 +29,6 @@ import org.springframework.web.bind.annotation.*;
 import javax.validation.Valid;
 import java.text.ParseException;
 import java.util.List;
-import java.util.Map;
 
 @RestController
 public class SarcasmotronRestController {
@@ -62,12 +61,16 @@ public class SarcasmotronRestController {
     @RequestMapping(value = "/sarcasm", method = RequestMethod.POST)
     public @ResponseBody ResponseEntity<Sarcasm> createSarcasm(@RequestBody final Sarcasm sarcasm) {
         final User user = sarcasm.getUser();
-        final User foundUser = mongoDBUserRepository.findOneByNickName(user.getNickName());
-        final User foundCreator = mongoDBUserRepository.findOneByNickName(getCurrentUserNickname());
-        if(foundUser != null && foundCreator != null) {
-            sarcasm.setUser(foundUser);
-            sarcasm.setCreator(foundCreator.getNickName());
-            return new ResponseEntity<>(mongoDBSarcasmRepository.save(sarcasm), HttpStatus.CREATED);
+        if (user != null) {
+            final User foundUser = mongoDBUserRepository.findOneByNickName(user.getNickName());
+            final User foundCreator = mongoDBUserRepository.findOneByNickName(getCurrentUserNickname());
+            if(foundUser != null && foundCreator != null) {
+                sarcasm.setUser(foundUser);
+                sarcasm.setCreator(foundCreator.getNickName());
+                return new ResponseEntity<>(mongoDBSarcasmRepository.save(sarcasm), HttpStatus.CREATED);
+            } else {
+                return new ResponseEntity<>(HttpStatus.NOT_FOUND);
+            }
         } else {
             return new ResponseEntity<>(HttpStatus.NOT_FOUND);
         }
@@ -255,7 +258,7 @@ public class SarcasmotronRestController {
                 return new ResponseEntity<>(new Stats().setValidity(statsRequest.getPeriod()).setMessage("User: " + statsRequest.getUser() + " not found!"), HttpStatus.NOT_FOUND);
             }
         } else {
-            final List<String> distinctUsers = voteCalculator.getDistinctUsers();
+            final List<String> distinctUsers = voteCalculator.getDistinctSarcasticUsers();
             Stats stats = new Stats();
             for (String distinctUser : distinctUsers) {
                 final VoteStats voteStats = voteCalculator.calculateVoteStatsForUser(

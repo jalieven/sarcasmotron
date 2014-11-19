@@ -51,7 +51,7 @@ import static org.junit.Assert.assertTrue;
 public class RestApiTest {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(RestApiTest.class);
-    private static final String SSO_TOKEN = "AQIC5wM2LY4SfcxA43m1bJgC-rO-IEKL38KmZstW04tRqmo.*AAJTSQACMDIAAlNLABQtNTQ2MzIwMjEyOTM5NjE5NDk1MAACUzEAAjAx*";
+    private static final String SSO_TOKEN = "AQIC5wM2LY4SfczW-rXozvlAYkc3XGAM1EUD728f45dS6WQ.*AAJTSQACMDIAAlNLABQtMTAyMDY5MTkyODczNjI1OTA2NQACUzEAAjAx*";
 
     @Value("${local.server.port}")
     private int port = 0;
@@ -266,7 +266,7 @@ public class RestApiTest {
         mongoDBSarcasmRepository.save(sarcasmZero);
         LOGGER.debug("Generated Sarcasm id: " + sarcasmZero.getId());
 
-        final List<String> distinctUsers = voteCalculator.getDistinctUsers();
+        final List<String> distinctUsers = voteCalculator.getDistinctSarcasticUsers();
         assertEquals(1, distinctUsers.size());
         assertEquals("jalie", distinctUsers.get(0));
 

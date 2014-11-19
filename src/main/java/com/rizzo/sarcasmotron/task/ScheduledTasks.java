@@ -19,8 +19,6 @@ import org.thymeleaf.spring4.SpringTemplateEngine;
 
 import javax.mail.MessagingException;
 import javax.mail.internet.MimeMessage;
-import java.util.Arrays;
-import java.util.Date;
 import java.util.List;
 import java.util.Map;
 
@@ -57,7 +55,7 @@ public class ScheduledTasks {
 
     public void calculateWinner() throws MessagingException {
         LOGGER.info("calculateWinner");
-        final List<String> users = voteCalculator.getDistinctUsers();
+        final List<String> users = voteCalculator.getDistinctSarcasticUsers();
         Stats stats = new Stats();
         final ReadablePeriod validPeriod = new StatsRequest().setPeriodExpression(winnerPeriod).getPeriod();
         for (String user : users) {

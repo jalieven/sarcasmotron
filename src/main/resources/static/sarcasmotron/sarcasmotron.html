@@ -9,7 +9,7 @@
 <link rel="import" href="../components/core-menu-button/core-menu-button.html">
 <link rel="import" href="../components/core-animated-pages/core-animated-pages.html">
 <link rel="import" href="../components/core-animated-pages/transitions/slide-up.html">
-<!--<link rel="import" href="../components/core-animated-pages/transitions/slide-from-right.html">-->
+<link rel="import" href="../components/core-animated-pages/transitions/slide-from-right.html">
 <link rel="import" href="../components/paper-shadow/paper-shadow.html">
 <link rel="import" href="../components/paper-input/paper-input.html">
 <link rel="import" href="../components/flatiron-director/flatiron-director.html">
@@ -117,16 +117,16 @@
 
             <div class="content">
 
-                <core-animated-pages id="anim" transitions="cross-fade"
+                <core-animated-pages id="anim" transitions="cross-fade slide-from-right"
                                      valueattr="id" selected="{{route}}">
                     <section id="stream">
-                        <sarcasm-stream show="all" stream="{{stream}}" cross-fade></sarcasm-stream>
+                        <sarcasm-stream show="all" stream="{{stream}}" cross-fade slide-from-right></sarcasm-stream>
                     </section>
                     <section id="new">
                         <sarcasm-add cross-fade slide-from-right></sarcasm-add>
                     </section>
                     <section id="favorite">
-                        <sarcasm-stream show="favorites" stream="{{stream}}" cross-fade></sarcasm-stream>
+                        <sarcasm-stream show="favorites" stream="{{stream}}" cross-fade slide-from-right></sarcasm-stream>
                     </section>
                     <section id="stats">
                         <div cross-fade slide-from-right>
