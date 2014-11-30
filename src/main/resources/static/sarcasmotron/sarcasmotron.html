@@ -186,7 +186,10 @@
                 });
                 var SarcasmCollection = Backbone.Collection.extend({
                     model: SarcasmModel,
-                    url: '/sarcasm',
+                    url : function () {
+                        return '/sarcasm?page=' + this.page
+                    },
+                    page: 1,
                     comparator: function (a, b) {
                         var one = moment(a.get("timestamp"), "YYYY-MM-DD'T'HH:mm:ss.SSSSZ");
                         var two = moment(b.get("timestamp"), "YYYY-MM-DD'T'HH:mm:ss.SSSSZ");

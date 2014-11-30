@@ -49,6 +49,9 @@ public class Sarcasm implements Serializable {
     @JsonIgnore
     private boolean edited;
 
+    @Field(type = FieldType.Nested)
+    private Sentiment sentiment;
+
     @JsonIgnore
     @Field(type = FieldType.Nested)
     private Map<String, Integer> votes;
@@ -129,6 +132,9 @@ public class Sarcasm implements Serializable {
         Integer total = 0;
         for (Map.Entry<String, Integer> userVoteEntry : getVotes().entrySet()) {
             total += userVoteEntry.getValue();
+        }
+        if(total < 0) {
+            total = 0;
         }
         return total;
     }
@@ -222,13 +228,16 @@ public class Sarcasm implements Serializable {
 
     public Sarcasm checkState(String user) {
         this.favorite = getFavorites().contains(user);
-        if(getVotes().containsKey(user)){
+        if(getVotes().containsKey(user)) {
             final Integer vote = getVotes().get(user);
             if(vote == 1) {
                 this.setVotedUp(true);
             } else if(vote == -1) {
                 this.setVotedDown(true);
             }
+        }
+        if(this.sentiment == null) {
+            this.sentiment = new Sentiment().setType(Sentiment.Type.NEUTRAL).setValue(1D);
         }
         return this;
     }
@@ -249,6 +258,15 @@ public class Sarcasm implements Serializable {
         this.votedDown = votedDown;
     }
 
+    public Sentiment getSentiment() {
+        return sentiment;
+    }
+
+    public Sarcasm setSentiment(Sentiment sentiment) {
+        this.sentiment = sentiment;
+        return this;
+    }
+
     @Override
     public String toString() {
         return new ToStringBuilder(this)
@@ -262,6 +280,7 @@ public class Sarcasm implements Serializable {
                 .append("votes", votes)
                 .append("favorites", favorites)
                 .append("comments", comments)
+                .append("sentiment", sentiment)
                 .toString();
     }
 }

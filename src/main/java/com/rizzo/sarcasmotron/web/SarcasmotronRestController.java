@@ -5,14 +5,18 @@ import com.google.common.collect.Lists;
 import com.rizzo.sarcasmotron.calc.VoteCalculator;
 import com.rizzo.sarcasmotron.domain.calc.VoteStats;
 import com.rizzo.sarcasmotron.domain.elasticsearch.ESSarcasm;
+import com.rizzo.sarcasmotron.domain.elasticsearch.ESSentiment;
 import com.rizzo.sarcasmotron.domain.elasticsearch.ESUser;
 import com.rizzo.sarcasmotron.domain.mongodb.Comment;
 import com.rizzo.sarcasmotron.domain.mongodb.Sarcasm;
+import com.rizzo.sarcasmotron.domain.mongodb.Sentiment;
 import com.rizzo.sarcasmotron.domain.mongodb.User;
 import com.rizzo.sarcasmotron.domain.web.*;
 import com.rizzo.sarcasmotron.elasticsearch.ElasticsearchSarcasmRepository;
 import com.rizzo.sarcasmotron.mongodb.MongoDBSarcasmRepository;
 import com.rizzo.sarcasmotron.mongodb.MongoDBUserRepository;
+import com.rizzo.sarcasmotron.sentiment.SentimentProbability;
+import com.rizzo.sarcasmotron.sentiment.SentimentFetcher;
 import net.logstash.logback.encoder.org.apache.commons.io.IOUtils;
 import org.elasticsearch.index.query.NestedQueryBuilder;
 import org.elasticsearch.index.query.QueryStringQueryBuilder;
@@ -55,6 +59,9 @@ public class SarcasmotronRestController {
     private ElasticsearchSarcasmRepository elasticsearchSarcasmRepository;
 
     @Autowired
+    private SentimentFetcher sentimentFetcher;
+
+    @Autowired
     private SecurityContextHolderStrategy securityContextHolderStrategy;
 
     @RequestMapping(value = "/user", method = RequestMethod.GET)
@@ -75,7 +82,15 @@ public class SarcasmotronRestController {
             final User foundCreator = mongoDBUserRepository.findOneByNickName(getCurrentUserNickname());
             if(foundUser != null && foundCreator != null) {
                 sarcasm.setUser(foundUser);
+                sarcasm.upVote(foundCreator.getNickName());
                 sarcasm.setCreator(foundCreator.getNickName());
+                SentimentProbability sentimentProbability =
+                        sentimentFetcher.getSentiment(sarcasm.getQuote(), sarcasm.getContext());
+                if(sentimentProbability != null) {
+                    Sentiment sentiment = new Sentiment().setValue(sentimentProbability.calculateSentiment());
+                    sentiment.setTypeByLabel(sentimentProbability.getLabel());
+                    sarcasm.setSentiment(sentiment);
+                }
                 return new ResponseEntity<>(mongoDBSarcasmRepository.save(sarcasm), HttpStatus.CREATED);
             } else {
                 return new ResponseEntity<>(HttpStatus.NOT_FOUND);
@@ -117,8 +132,7 @@ public class SarcasmotronRestController {
         ResponseEntity<Sarcasm> responseEntity;
         final Sarcasm foundSarcasm = mongoDBSarcasmRepository.findOne(id);
         if(foundSarcasm != null) {
-            String currentUser = getCurrentUserNickname();
-            if(currentUser.equals(foundSarcasm.getCreator())) {
+            if(foundSarcasm.getCreator().equals(getCurrentUserNickname())) {
                 foundSarcasm.setQuote(sarcasm.getQuote()).setContext(sarcasm.getContext()).setEdited(true);
                 final Sarcasm updatedSarcasm = mongoDBSarcasmRepository.save(foundSarcasm);
                 responseEntity = new ResponseEntity<>(updatedSarcasm, HttpStatus.NO_CONTENT);
@@ -136,8 +150,12 @@ public class SarcasmotronRestController {
         ResponseEntity responseEntity;
         final Sarcasm foundSarcasm = mongoDBSarcasmRepository.findOne(id);
         if(foundSarcasm != null) {
-            mongoDBSarcasmRepository.delete(id);
-            responseEntity = new ResponseEntity(HttpStatus.NO_CONTENT);
+            if(foundSarcasm.getUser().getNickName().equals(getCurrentUserNickname())) {
+                mongoDBSarcasmRepository.delete(id);
+                responseEntity = new ResponseEntity(HttpStatus.NO_CONTENT);
+            } else {
+                responseEntity = new ResponseEntity(HttpStatus.UNAUTHORIZED);
+            }
         } else {
             responseEntity = new ResponseEntity(HttpStatus.NOT_FOUND);
         }
@@ -335,9 +353,15 @@ public class SarcasmotronRestController {
                 .setCreator(esSarcasm.getCreator())
                 .setVotes(esSarcasm.getVotes())
                 .setTimestamp(esSarcasm.getTimestamp())
-                .setFavorites(esSarcasm.getFavorites());
+                .setFavorites(esSarcasm.getFavorites())
+                .setSentiment(mapSentiment(esSarcasm.getSentiment()));
         sarcasm.checkState(getCurrentUserNickname());
         return sarcasm;
+    }
+
+    private Sentiment mapSentiment(ESSentiment eSSentiment) {
+        return new Sentiment().setType(Sentiment.Type.fromLabel(eSSentiment.getType().getLabel()))
+                .setValue(eSSentiment.getValue());
     }
 
     private User mapUser(ESUser esUser) {

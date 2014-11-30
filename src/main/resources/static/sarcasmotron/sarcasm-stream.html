@@ -144,7 +144,7 @@
                               on-vote-down="{{handleVoteDown}}"
                               on-comment="{{handleComment}}"
                               hidden?="{{show == 'favorites' && !sarcasm.favorite}}">
-                    <img src="http://www.gravatar.com/avatar/{{sarcasm.user.gravatar}}?s=70" width="70" height="70">
+                    <img src="http://www.gravatar.com/avatar/{{sarcasm.user.gravatar}}?s=70">
                     <h2>{{sarcasm.user.givenName}} {{sarcasm.user.surName}}</h2>
                     <h4>VoteTotal: {{sarcasm.voteTotal}}</h4>
                     <p class="context"><b>{{sarcasm.timestamp | toHumanReadable}}</b></p>

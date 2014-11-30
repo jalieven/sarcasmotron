@@ -44,6 +44,9 @@ public class ESSarcasm implements Serializable {
 
     private Set<String> favorites;
 
+    @Field(type = FieldType.Nested)
+    private ESSentiment sentiment;
+
     public String getId() {
         return this.id;
     }
@@ -173,6 +176,14 @@ public class ESSarcasm implements Serializable {
         return this;
     }
 
+    public ESSentiment getSentiment() {
+        return sentiment;
+    }
+
+    public ESSarcasm setSentiment(ESSentiment sentiment) {
+        this.sentiment = sentiment;
+        return this;
+    }
 
     @Override
     public String toString() {
@@ -186,6 +197,7 @@ public class ESSarcasm implements Serializable {
                 .append("votes", votes)
                 .append("comments", comments)
                 .append("favorites", favorites)
+                .append("sentiment", sentiment)
                 .toString();
     }
 }

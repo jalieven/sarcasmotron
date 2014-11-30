@@ -1,5 +1,7 @@
 package com.rizzo.sarcasmotron.task;
 
+import com.google.common.base.Predicate;
+import com.google.common.collect.Iterables;
 import com.rizzo.sarcasmotron.calc.VoteCalculator;
 import com.rizzo.sarcasmotron.domain.calc.VoteStats;
 import com.rizzo.sarcasmotron.domain.mongodb.User;
@@ -20,7 +22,7 @@ import org.thymeleaf.spring4.SpringTemplateEngine;
 import javax.mail.MessagingException;
 import javax.mail.internet.MimeMessage;
 import java.util.List;
-import java.util.Map;
+import java.util.Set;
 
 public class ScheduledTasks {
 
@@ -66,39 +68,56 @@ public class ScheduledTasks {
         stats.setValidity(validPeriod);
         mongoDBStatsRepository.save(stats);
 
-        boolean winner = true;
-        for (Map.Entry<String, VoteStats> userVoteStats : stats.getVoteStats().entrySet()) {
-            final User user = mongoDBUserRepository.findOneByNickName(userVoteStats.getKey());
-            if (user != null) {
-                final VoteStats voteStats = userVoteStats.getValue();
-                final Context context = new Context();
-                String greeting;
-                if (winner) {
-                    greeting = "Congratulations " + user.getGivenName() + " " + user.getSurName() + ", you have been voted the most sarcastic person of the week!";
-                    winner = false;
-                } else {
-                    greeting = "Hello " + user.getGivenName() + " " + user.getSurName();
-                }
-                context.setVariable("greeting", greeting);
-                context.setVariable("stats", voteStats);
-                context.setVariable("from", stats.getStart());
-                context.setVariable("until", stats.getEnd());
+        final Set<String> contestants = stats.getVoteStats().keySet();
 
-                final String email = user.getEmail();
-                final String htmlContent = springTemplateEngine.process("email", context);
-                LOGGER.debug(htmlContent);
+        // send winner-mail
+        final String winner = Iterables.getFirst(contestants, null);
+        final User winningUser = mongoDBUserRepository.findOneByNickName(winner);
+        final String winnerFullname = winningUser.getGivenName() + " " + winningUser.getSurName();
+        final String winnerGreeting = "Congratulations " + winnerFullname
+                + ", you have been voted the most sarcastic person of the week!";
+        final VoteStats winnerVoteStats = stats.getVoteStats().get(winner);
+        final Context winningContext = new Context();
+        winningContext.setVariable("greeting", winnerGreeting);
+        winningContext.setVariable("stats", winnerVoteStats);
+        winningContext.setVariable("from", stats.getStart());
+        winningContext.setVariable("until", stats.getEnd());
+        sendMail(winningUser, winningContext, "winner-email");
 
-                final MimeMessage mimeMessage = mailSender.createMimeMessage();
-                MimeMessageHelper message = new MimeMessageHelper(mimeMessage);
-                message.setFrom(fromEmailAddress);
-                message.setTo(email);
-                message.setSubject(subject);
-                message.setText(htmlContent, true);
-                mailSender.send(mimeMessage);
-            } else {
-                LOGGER.error("Encountered unknown user (" + userVoteStats.getKey() + ") while calculating winner!");
+        // send loser-mail
+        final Iterable<String> losers = Iterables.filter(contestants, new Predicate<String>() {
+            @Override
+            public boolean apply(String nickName) {
+                return !nickName.equals(winner);
             }
+        });
+
+        for (String loser : losers) {
+            final User loserUser = mongoDBUserRepository.findOneByNickName(loser);
+            final VoteStats loserVoteStats = stats.getVoteStats().get(loser);
+            final String loserGreeting = "Hello " + loserUser.getGivenName() + " " + loserUser.getSurName();
+            final Context loserContext = new Context();
+            loserContext.setVariable("winner", winnerFullname);
+            loserContext.setVariable("greeting", loserGreeting);
+            loserContext.setVariable("stats", loserVoteStats);
+            loserContext.setVariable("from", stats.getStart());
+            loserContext.setVariable("until", stats.getEnd());
+            sendMail(loserUser, loserContext, "loser-email");
         }
 
     }
+
+    private void sendMail(User user, Context context, String template) throws MessagingException {
+        final String email = user.getEmail();
+        final String htmlContent = springTemplateEngine.process(template, context);
+        LOGGER.debug(htmlContent);
+        final MimeMessage mimeMessage = mailSender.createMimeMessage();
+        MimeMessageHelper message = new MimeMessageHelper(mimeMessage);
+        message.setFrom(fromEmailAddress);
+        message.setTo(email);
+        message.setSubject(subject);
+        message.setText(htmlContent, true);
+        mailSender.send(mimeMessage);
+    }
+
 }

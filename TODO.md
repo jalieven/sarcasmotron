@@ -1,12 +1,16 @@
 - Write Web-UI for comments on sarcasms
 - Create metrics Web-UI panel for viewing overall user sarcastic trends (parameters: user, period, interval)
-- Configurable period summary/winner with email -> link inside mail to overview statistics users.
-- Search endpoint that delegates Query-string-query to ES
-- Add tovote functionality/filtering to CLI
-- Add avatar to user and return it along
-- Make error logging in browser console uniform
-- Scroll down in stream fetches new pages
-                    
-                                            
-- Rewrite into angular (Polymer is fun but not production ready)
+    -> pie chart for sentiment
+    -> bar-chart for trending
+
+- Votable reward for the period
+- Bit.ly integration (https://api-ssl.bitly.com/v3/shorten?access_token=8c00150a9681fb0b078aa721e16eedd75281de25&longUrl=http%3A%2F%2Fgoogle.com%2F)
 - Infinite scroll on stream (pagination without skip) with percentage bubble
+- Add sentiment analysis for sarasms on front-end and in mail the calculation
+- Reindex trigger for refreshing Elasticsearch index from mongodb data
+- Documentation cookbook: motivation, usage, voting system, calculations
+- Anti parkinson check while adding sarcasms
+- Websocket push notifications
+- Rewrite into angular (Polymer is fun but not production ready)
+- Configurable period summary/winner with email -> link inside mail to overview statistics users.
+- Make error logging in browser console uniform

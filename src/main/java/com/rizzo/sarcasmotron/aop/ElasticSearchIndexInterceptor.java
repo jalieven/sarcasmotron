@@ -4,9 +4,11 @@ import com.google.common.collect.Iterables;
 import com.google.common.collect.Lists;
 import com.rizzo.sarcasmotron.domain.elasticsearch.ESComment;
 import com.rizzo.sarcasmotron.domain.elasticsearch.ESSarcasm;
+import com.rizzo.sarcasmotron.domain.elasticsearch.ESSentiment;
 import com.rizzo.sarcasmotron.domain.elasticsearch.ESUser;
 import com.rizzo.sarcasmotron.domain.mongodb.Comment;
 import com.rizzo.sarcasmotron.domain.mongodb.Sarcasm;
+import com.rizzo.sarcasmotron.domain.mongodb.Sentiment;
 import com.rizzo.sarcasmotron.domain.mongodb.User;
 import com.rizzo.sarcasmotron.elasticsearch.ElasticsearchSarcasmRepository;
 import org.aopalliance.intercept.MethodInterceptor;
@@ -75,7 +77,13 @@ public class ElasticSearchIndexInterceptor implements MethodInterceptor {
                 .setVotes(mongoSarcasm.getVotes())
                 .setComments(mapComments(mongoSarcasm.getComments()))
                 .setFavorites(mongoSarcasm.getFavorites())
-                .setTimestamp(mongoSarcasm.getTimestamp());
+                .setTimestamp(mongoSarcasm.getTimestamp())
+                .setSentiment(mapSentiment(mongoSarcasm.getSentiment()));
+    }
+
+    private ESSentiment mapSentiment(Sentiment sentiment) {
+        return new ESSentiment().setValue(sentiment.getValue())
+                .setType(ESSentiment.Type.fromLabel(sentiment.getType().getLabel()));
     }
 
     private ESUser mapUser(User user) {
