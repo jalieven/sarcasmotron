@@ -32,8 +32,9 @@ spring:
     content-type: text/html
     cache: true
 
+# sso
 openam:
-  serverurl: http://msb-on-101.mmis.be:9880/sso
+  serverurl:
   username:
   secret:
 
@@ -50,7 +51,6 @@ scheduling:
   # we calculate the most sarcastic person of the week
   winnerCalculation:
     cron: 0 0 15 * * 5
-    # cron: '*/10 * * * * *'
     period: '1w'
 
 mail:
@@ -59,4 +59,20 @@ mail:
   protocol: smtp
   winnerCalculation:
     fromAddress: help@milieuinfo.be
-    subject: Weekoverzicht Sarcasmotron
+    subject: Sarcasmotron Ballot Report
+
+fetcher:
+  user-agent: Mozilla/5.0 (Windows NT 6.3; Win64; x64) AppleWebKit/537.36 (KHTML like Gecko) Chrome/37.0.2049.0 Safari/537.36
+  maximum:
+    thread-pool-size: 1024
+    thread-pool-keepalive-seconds: 60
+    connections-per-host: 150
+    request-timeout-milliseconds: 60000
+  throttle:
+    connections-wait-milliseconds: 2147483647
+    connections-total: 1024
+
+pusher:
+  appId:
+  apiKey:
+  apiSecret:

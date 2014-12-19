@@ -15,6 +15,7 @@ import com.rizzo.sarcasmotron.domain.web.*;
 import com.rizzo.sarcasmotron.elasticsearch.ElasticsearchSarcasmRepository;
 import com.rizzo.sarcasmotron.mongodb.MongoDBSarcasmRepository;
 import com.rizzo.sarcasmotron.mongodb.MongoDBUserRepository;
+import com.rizzo.sarcasmotron.pusher.PusherService;
 import com.rizzo.sarcasmotron.sentiment.SentimentProbability;
 import com.rizzo.sarcasmotron.sentiment.SentimentFetcher;
 import net.logstash.logback.encoder.org.apache.commons.io.IOUtils;
@@ -62,6 +63,9 @@ public class SarcasmotronRestController {
     private SentimentFetcher sentimentFetcher;
 
     @Autowired
+    private PusherService pusherService;
+
+    @Autowired
     private SecurityContextHolderStrategy securityContextHolderStrategy;
 
     @RequestMapping(value = "/user", method = RequestMethod.GET)
@@ -91,7 +95,9 @@ public class SarcasmotronRestController {
                     sentiment.setTypeByLabel(sentimentProbability.getLabel());
                     sarcasm.setSentiment(sentiment);
                 }
-                return new ResponseEntity<>(mongoDBSarcasmRepository.save(sarcasm), HttpStatus.CREATED);
+                final Sarcasm savedSarcasm = mongoDBSarcasmRepository.save(sarcasm);
+                pusherService.pushSarcasm(savedSarcasm);
+                return new ResponseEntity<>(savedSarcasm, HttpStatus.CREATED);
             } else {
                 return new ResponseEntity<>(HttpStatus.NOT_FOUND);
             }

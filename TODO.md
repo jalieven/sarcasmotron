@@ -1,16 +1,17 @@
-- Write Web-UI for comments on sarcasms
 - Create metrics Web-UI panel for viewing overall user sarcastic trends (parameters: user, period, interval)
     -> pie chart for sentiment
     -> bar-chart for trending
 
+- Engagement mail at midnight (day votes, user day votes, preliminary result table) + unsubscribe functionality) Mandrill?
 - Votable reward for the period
-- Bit.ly integration (https://api-ssl.bitly.com/v3/shorten?access_token=8c00150a9681fb0b078aa721e16eedd75281de25&longUrl=http%3A%2F%2Fgoogle.com%2F)
+- Documentation cookbook: motivation, usage, voting system, calculations
+- Websocket push notifications pusher.com
 - Infinite scroll on stream (pagination without skip) with percentage bubble
 - Add sentiment analysis for sarasms on front-end and in mail the calculation
 - Reindex trigger for refreshing Elasticsearch index from mongodb data
-- Documentation cookbook: motivation, usage, voting system, calculations
 - Anti parkinson check while adding sarcasms
-- Websocket push notifications
 - Rewrite into angular (Polymer is fun but not production ready)
 - Configurable period summary/winner with email -> link inside mail to overview statistics users.
+- Write Web-UI for comments on sarcasms
 - Make error logging in browser console uniform
+- Bit.ly integration (https://api-ssl.bitly.com/v3/shorten?access_token=8c00150a9681fb0b078aa721e16eedd75281de25&longUrl=http%3A%2F%2Fgoogle.com%2F)
